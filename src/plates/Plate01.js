@@ -1,12 +1,16 @@
 import React, { useRef, useEffect } from 'react';
 import { scaleLinear, extent, select  } from 'd3';
+import Background from '../components/Background';
+import { BagOfMoney150x138 } from '../components/Shapes';
 
 const topMargin = 100;
 const leftMargin = 100;
 const bottomMargin = 100;
-const itemHeight = 100;
-const itemBaseWidth = 100;
 const titleText = "Value of land \nowned by \nGeorgia negroes";
+const elementWidth = 150;
+const elementHeight = 138;
+const labelTextSize = 14;
+const spacing = 20;
 
 const Visualization = ({
     element, 
@@ -16,44 +20,77 @@ const Visualization = ({
     if (data.length == 0) return; // bail out if we don't have data
     
     const dataRange = extent(data, d => d.value);
-    const width = scaleLinear(dataRange, [itemBaseWidth, itemBaseWidth * 2]);
 
-    const yPosition = scaleLinear([0, data.length], [topMargin, size.height - (bottomMargin)]);
-    const xPosition = (d, i) => (size.width / 2) - (width(d.value) / 2);
+    const yRange = [topMargin, size.height - (bottomMargin)];
+    const yPosition = scaleLinear([0, data.length], yRange);
+    const xPosition = size.width / 2;
 
-    let parentSelection = select(element).selectAll("g").data(data);
+    // We need to calculate how much we have left for each element
+    let scaleAdjusment = 1;
+    let remainingItemHeight = (yRange[1] - yRange[0] - (labelTextSize * data.length) - (spacing * (data.length - 1))) / (data.length);
+    if (remainingItemHeight < elementHeight) {
+        scaleAdjusment = remainingItemHeight / elementHeight;
+    }
+    //TODO: Nelson need to add a mininum
+
+    const resolvedElementHeight = elementHeight * scaleAdjusment;
+    const resolvedElementWidth = elementWidth * scaleAdjusment;
+
+    const scale = scaleLinear(dataRange, [scaleAdjusment, scaleAdjusment * 1.5]);
+
+    let parentSelection = select(element).selectAll('g.mark').data(data);
     
-    // Container element for each one
     parentSelection = parentSelection.join(
         enter => {
-            let container = enter.append('g');
+            const container = enter.append('g').classed('mark', true);
 
-            container.append('rect').classed('mark', true);
+            const shapeContainer = container.append('g').classed('shape-container', true);
+            shapeContainer.append('path')
+                          .classed('shape-background', true)
+                          .attr('filter', 'url(#filter-72uyj5y9zw-2)')
+                          .attr('d', BagOfMoney150x138);
+
+            shapeContainer.append('path')
+                          .classed('shape-foreground', true)
+                          .attr('fill', '#654321')
+                          .attr('fill-opacity', '0.4')
+                          .attr('stroke', '#654321')
+                          .attr('stroke-width', '1')
+                          .attr('d', BagOfMoney150x138);
+
             container.append('text').classed('value', true);
             container.append('text').classed('year', true);
 
             return container;
         }
-    ).attr('transform', (d, i) => `translate(${xPosition(d, i)} ${yPosition(i)})`);
+    ).attr('transform', (d, i) => `translate(${xPosition} ${yPosition(i)})`);
 
-    // Properties for the individual marks
-    parentSelection.select('.mark')
-                   .attr('width', d => width(d.value))
-                   .attr('height', itemHeight)
-                   .attr('fill', 'yellow');
+    // Returns the transform for position and scale of each one of the money bags
+    const transform = (d) => {
+        const widthRatio = scale(d.value);
+        const heightRatio = scaleAdjusment;
+        const xAdjustment = (resolvedElementWidth * widthRatio) / 2;
+
+        return `translate(${-xAdjustment} 0) scale(${widthRatio} ${heightRatio})`;
+    }
+
+    // Properties for money bags
+    parentSelection.select('.shape-background')
+                   .attr('transform', transform);
+
+    parentSelection.select('.shape-foreground')
+                   .attr('transform', transform);
 
     // Properties for the year text
     parentSelection.select('.value')
-                   .attr('x', d => width(d.value) / 2)
-                   .attr('y', itemHeight / 2)
+                   .attr('y', resolvedElementHeight / 2)
                    .attr('text-anchor', 'middle')
                    .attr('alignment-baseline', 'hanging')
                    .text(d => `$${d.value}`);
 
     // Properties for the value text
     parentSelection.select('.year')
-                   .attr('x', d => width(d.value) / 2)
-                   .attr('y', itemHeight)
+                   .attr('y', resolvedElementHeight + 8)
                    .attr('text-anchor', 'middle')
                    .attr('alignment-baseline', 'hanging')
                    .text(d => d.year);
@@ -75,12 +112,24 @@ const Chart = ({
 
     return (
         <svg className='plate'>
-            <text x={leftMargin} y={topMargin}>
-                {titleText.split('\n').map((text, i) => (
-                    <tspan x={leftMargin} dy="1.2em" key={i}>{text}</tspan>
-                ))}
-            </text>
-            <g ref={containerRef} />
+            <defs>
+                <filter x="-5.6%" y="-6.3%" width="111.3%" height="112.7%" filterUnits="objectBoundingBox" id="filter-72uyj5y9zw-2">
+                    <feMorphology radius="5" operator="erode" in="SourceAlpha" result="shadowSpreadInner1"></feMorphology>
+                    <feGaussianBlur stdDeviation="5" in="shadowSpreadInner1" result="shadowBlurInner1"></feGaussianBlur>
+                    <feOffset dx="1" dy="0" in="shadowBlurInner1" result="shadowOffsetInner1"></feOffset>
+                    <feComposite in="shadowOffsetInner1" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="shadowInnerInner1"></feComposite>
+                    <feColorMatrix values="0 0 0 0 0.396078431   0 0 0 0 0.262745098   0 0 0 0 0.129411765  0 0 0 0.228529283 0" type="matrix" in="shadowInnerInner1"></feColorMatrix>
+                </filter>
+            </defs>
+            <g>
+                <Background />
+                <text x={leftMargin} y={topMargin}>
+                    {titleText.split('\n').map((text, i) => (
+                        <tspan x={leftMargin} dy="1.2em" key={i}>{text}</tspan>
+                    ))}
+                </text>
+                <g ref={containerRef} />
+            </g>
         </svg>
     );
 }
