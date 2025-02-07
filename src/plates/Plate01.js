@@ -6,7 +6,7 @@ import { BagOfMoney150x138 } from '../components/Shapes';
 const topMargin = 20;
 const leftMargin = 20;
 const bottomMargin = 20;
-const titleText = "Value of \nland \nowned by \nGeorgia \nnegroes";
+const titleText = "Value of \nland \nowned by \nGeorgia \Blacks";
 const elementWidth = 150;
 const elementHeight = 138;
 const labelTextSize = 14;
