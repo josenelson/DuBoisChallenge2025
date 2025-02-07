@@ -1,0 +1,13 @@
+$primaryColor: red;
+$secondaryColor: gray;
+
+body {
+    background-color: grey;
+}
+
+html, body, #root, .container, .plate {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+}
