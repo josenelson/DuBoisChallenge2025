@@ -3,9 +3,9 @@ import { scaleLinear, extent, select  } from 'd3';
 import Background from '../components/Background';
 import { BagOfMoney150x138 } from '../components/Shapes';
 
-const topMargin = 100;
-const leftMargin = 100;
-const bottomMargin = 100;
+const topMargin = 20;
+const leftMargin = 20;
+const bottomMargin = 20;
 const titleText = "Value of land \nowned by \nGeorgia negroes";
 const elementWidth = 150;
 const elementHeight = 138;
@@ -69,9 +69,9 @@ const Visualization = ({
     const transform = (d) => {
         const widthRatio = scale(d.value);
         const heightRatio = scaleAdjusment;
-        const xAdjustment = (resolvedElementWidth * widthRatio) / 2;
+        const xAdjustment = (elementWidth * widthRatio) / 2;// (resolvedElementWidth * widthRatio) / 2;
 
-        return `translate(${-xAdjustment} 0) scale(${widthRatio} ${heightRatio})`;
+        return `translate(${-xAdjustment} 0) scale(${widthRatio} ${heightRatio}) `;
     }
 
     // Properties for money bags
