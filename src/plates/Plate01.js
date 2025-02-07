@@ -88,7 +88,6 @@ const Visualization = ({
     // Properties for the year text
     parentSelection.select('.value')
                    .attr('y', resolvedElementHeight / 2)
-                   .attr('dy', '1em')
                    .attr('text-anchor', 'middle')
                    .attr('alignment-baseline', 'hanging')
                    .attr('font-family', 'Charter')
