@@ -6,11 +6,15 @@ import { BagOfMoney150x138 } from '../components/Shapes';
 const topMargin = 20;
 const leftMargin = 20;
 const bottomMargin = 20;
-const titleText = "Value of land \nowned by \nGeorgia negroes";
+const titleText = "Value of \nland \nowned by \nGeorgia \nnegroes";
 const elementWidth = 150;
 const elementHeight = 138;
 const labelTextSize = 14;
-const spacing = 20;
+const spacing = 40;
+
+const TitleTextStyle = {
+    font: "2em 'B52-ULC W00 ULC'"
+};
 
 const Visualization = ({
     element, 
@@ -84,8 +88,12 @@ const Visualization = ({
     // Properties for the year text
     parentSelection.select('.value')
                    .attr('y', resolvedElementHeight / 2)
+                   .attr('dy', '1em')
                    .attr('text-anchor', 'middle')
                    .attr('alignment-baseline', 'hanging')
+                   .attr('font-family', 'Charter')
+                   .attr('font-weight', 'bold')
+                   .attr('fill-opacity', '0.9')
                    .text(d => `$${d.value}`);
 
     // Properties for the value text
@@ -93,6 +101,9 @@ const Visualization = ({
                    .attr('y', resolvedElementHeight + 8)
                    .attr('text-anchor', 'middle')
                    .attr('alignment-baseline', 'hanging')
+                   .attr('font-family', 'Charter')
+                   .attr('letter-spacing', '-1')
+                   .attr('fill-opacity', '0.6')
                    .text(d => d.year);
 };
 
@@ -123,9 +134,13 @@ const Chart = ({
             </defs>
             <g>
                 <Background />
-                <text x={leftMargin} y={topMargin}>
+                <text 
+                    style={TitleTextStyle}
+                    opacity="0.7"
+                    x={leftMargin} 
+                    y={topMargin}>
                     {titleText.split('\n').map((text, i) => (
-                        <tspan x={leftMargin} dy="1.2em" key={i}>{text}</tspan>
+                        <tspan x={leftMargin} dy="1.2em" key={i}>{text.toLocaleUpperCase()}</tspan>
                     ))}
                 </text>
                 <g ref={containerRef} />
