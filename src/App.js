@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from "react";
-import Container from "./components/Container";
+import { BrowserRouter, Route, Routes } from "react-router";
+import withContainer from "./components/ContainerWrapper";
 import Plate01 from './plates/Plate01';
 import { getSource01 } from './util/data';
 
@@ -9,11 +10,13 @@ const App = () => {
     useEffect(() => {
         getSource01().then(setData);
     }, []);
-    
+
     return (
-        <Container>
-            <Plate01 data={data} />
-        </Container>
+        <BrowserRouter>
+            <Routes>
+                <Route index path="/" element={withContainer(<Plate01 data={data} />)} />
+            </Routes>
+        </BrowserRouter>
     );
 
 }
