@@ -12,7 +12,10 @@ module.exports = {
         port: "9500",
         static: ["./public", "./data"],
         hot: true,
-        liveReload: true
+        liveReload: true,
+        historyApiFallback: {
+        index: 'index.html'
+        }
     },
     resolve: {
         extensions: ['.js', '.jsx', '.json']

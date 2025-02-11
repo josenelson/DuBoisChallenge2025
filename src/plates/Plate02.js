@@ -1,35 +1,50 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { scaleLinear, extent, select  } from 'd3';
-import { getSource01 } from '../util/data';
+import { getSource02 } from '../util/data';
 import Background from '../components/Background';
 import { BagOfMoney150x138 } from '../components/Shapes';
 
-const topMargin = 20;
-const leftMargin = 20;
-const bottomMargin = 20;
-const titleText = "Value of \nland \nowned by \nBlack \nGeorgians";
-const elementWidth = 150;
-const elementHeight = 138;
-const labelTextSize = 14;
-const spacing = 40;
+const margins = {
+    top: 20,
+    bottom: 20, 
+    left: 20,
+    right: 20
+}
+
+const padding = 20;
+
+const titleText = "Acres of \nland \nowned by \nBlack \nGeorgians";
 
 const TitleTextStyle = {
     font: "2em 'B52-ULC W00 ULC'"
 };
+
+const getYRange = (size) => {
+    return [margins.top, size.height - (margins.bottom)];
+}
+
+const getXRange = () => {
+    const titleTextElement = window.document.querySelector('#titleText');
+    const titleTextElementBox = titleTextElement.getBBox();
+    const leftMargin = titleTextElementBox.x + titleTextElementBox.width;
+
+    const xRange = [leftMargin + margins.left, size.width - margins.right];
+
+    return xRange;
+}
 
 const Visualization = ({
     element, 
     size,
     data
 }) => {
-    if (data.length == 0) return; // bail out if we don't have data
-    
-    const dataRange = extent(data, d => d.value);
+    if (data.length == 0) return;
 
-    const yRange = [topMargin, size.height - (bottomMargin)];
-    const yPosition = scaleLinear([0, data.length], yRange);
-    const xPosition = size.width / 2;
+    const valueRange = extent(data, d => d.value);
+    const yRange = getYRange();
+    const xRange = getXRange();
 
+    /*
     // We need to calculate how much we have left for each element
     let scaleAdjusment = 1;
     let remainingItemHeight = (yRange[1] - yRange[0] - (labelTextSize * data.length) - (spacing * (data.length - 1))) / (data.length);
@@ -104,6 +119,7 @@ const Visualization = ({
                    .attr('letter-spacing', '-1')
                    .attr('fill-opacity', '0.6')
                    .text(d => d.year);
+                   */
 };
 
 const Chart = ({
@@ -113,7 +129,7 @@ const Chart = ({
     const [data, setData] = useState([]);
 
     useEffect(() => {
-        getSource01().then(data => {
+        getSource02().then(data => {
             const sortedData = data.sort((a, b) => a.year - b.year)
             setData(sortedData)
         });
@@ -139,12 +155,13 @@ const Chart = ({
             <g>
                 <Background />
                 <text 
+                    id="titleText"
                     style={TitleTextStyle}
                     opacity="0.7"
-                    x={leftMargin} 
-                    y={topMargin}>
+                    x={margins.left} 
+                    y={margins.top}>
                     {titleText.split('\n').map((text, i) => (
-                        <tspan x={leftMargin} dy="1.2em" key={i}>{text.toLocaleUpperCase()}</tspan>
+                        <tspan x={margins.left} dy="1.2em" key={i}>{text.toLocaleUpperCase()}</tspan>
                     ))}
                 </text>
                 <g ref={containerRef} />

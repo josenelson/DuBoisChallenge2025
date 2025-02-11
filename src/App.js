@@ -10,7 +10,7 @@ const App = () => {
         <BrowserRouter>
             <Routes>
                 <Route index path="/plate01?" element={withContainer(<Plate01 />)} />
-                <Route index path="/plate02" element={withContainer(<Plate02 />)} />
+                <Route path="/plate02" element={withContainer(<Plate02 />)} />
             </Routes>
         </BrowserRouter>
     );
