@@ -58,7 +58,15 @@ const Visualization = ({
                         .align(0);
     const xScale = scaleLinear([0, valueRange[1]], [0, xRange[1] - xRange[0]]);
 
-    const shouldShowValue = index => index == 0 || index == data.length - 1; 
+    const shouldShowValue = year => {
+        if (data.length === 0) return false;
+
+        if (data[0].year === year || data[data.length -1].year === year) {
+            return true;
+        }
+        
+        return false; 
+    }
 
     const valueFormatter = format(",");
 
@@ -84,21 +92,21 @@ const Visualization = ({
         }
     );
 
-    parentSelection.select('.bar')
-                   .attr('x', xRange[0])
-                   .attr('y', d => yScale(d.year))
-                   .attr('width', 0)
-                   .attr('height', yScale.bandwidth())
-                   .attr('fill', '#DC143C')
-                   .attr('rx', 2)
-                   .attr('stroke', '#654321')
-                   .attr('stroke-with', '1')
-                   .attr('stroke-opacity', '0.2')
-                   .attr('fill-opacity', '0.4')
-                   .transition()
-                        .delay((d, i) => i * animationDelay)
-                        .ease(easeCubic)
-                        .attr('width', d => xScale(d.value));
+    const barSelection = parentSelection.select('.bar');
+    barSelection.attr('x', xRange[0])
+                .attr('y', d => yScale(d.year))
+                .attr('width', 0)
+                .attr('height', yScale.bandwidth())
+                .attr('fill', '#DC143C')
+                .attr('rx', 2)
+                .attr('stroke', '#654321')
+                .attr('stroke-with', '1')
+                .attr('stroke-opacity', '0.2')
+                .attr('fill-opacity', '0.4')
+                .transition()
+                    .delay((d, i) => i * animationDelay)
+                    .ease(easeCubic)
+                    .attr('width', d => xScale(d.value));
 
     parentSelection.select('.bar-filter')
                    .attr('x', xRange[0])
@@ -128,19 +136,37 @@ const Visualization = ({
                         .delay((d, i) => i * animationDelay)
                         .attr('fill-opacity', '0.9');
 
-    parentSelection.select('.value')
-                   .attr('text-anchor', 'start')
-                   .attr('alignment-baseline', 'middle')
-                   .attr('x', d => xRange[0] + 5)
-                   .attr('y', d => yScale(d.year))
-                   .attr('dy', yScale.bandwidth() / 2)
-                   .attr('font-family', 'Charter')
-                   .attr('font-weight', 'bold')
-                   .attr('fill-opacity', 0)
-                   .text(d => valueFormatter(Math.round(d.value)))
-                   .transition()
-                        .delay((d, i) => i * animationDelay)
-                        .attr('fill-opacity', (_, i) => shouldShowValue(i) ? '0.9' : '0');
+    const valueSelection = parentSelection.select('.value');
+    valueSelection.attr('text-anchor', 'start')
+                  .attr('alignment-baseline', 'middle')
+                  .attr('x', d => xRange[0] + 5)
+                  .attr('y', d => yScale(d.year))
+                  .attr('dy', yScale.bandwidth() / 2)
+                  .attr('font-family', 'Charter')
+                  .attr('font-weight', 'bold')
+                  .attr('fill-opacity', 0)
+                  .attr('data-year', d => d.year)
+                  .text(d => valueFormatter(Math.round(d.value)));
+
+    valueSelection.transition()
+                  .delay((d, i) => i * animationDelay)
+                        .attr('fill-opacity', data => shouldShowValue(data.year) ? '0.9' : '0');
+
+    barSelection.on('mouseenter', (_, data) => {
+        let selection = select(`.value[data-year="${data.year}"]`);
+        selection.transition()
+                 .delay(animationDelay)
+                    .attr('fill-opacity', '0.9');
+    });
+
+    barSelection.on('mouseleave', (_, data) => {
+        let selection = select(`.value[data-year="${data.year}"]`);
+        selection.transition()
+                 .delay(animationDelay * 2)
+                    .attr('fill-opacity', () => {
+                        return shouldShowValue(data.year) ? '0.9' : '0';
+                    });
+    });
 };
 
 const Chart = ({
