@@ -2,7 +2,6 @@ import React, { useRef, useEffect, useState } from 'react';
 import { scaleLinear, extent, select  } from 'd3';
 import { getSource02 } from '../util/data';
 import Background from '../components/Background';
-import { BagOfMoney150x138 } from '../components/Shapes';
 
 const margins = {
     top: 20,
@@ -10,8 +9,6 @@ const margins = {
     left: 20,
     right: 20
 }
-
-const padding = 20;
 
 const titleText = "Acres of \nland \nowned by \nBlack \nGeorgians";
 
@@ -23,7 +20,7 @@ const getYRange = (size) => {
     return [margins.top, size.height - (margins.bottom)];
 }
 
-const getXRange = () => {
+const getXRange = (size) => {
     const titleTextElement = window.document.querySelector('#titleText');
     const titleTextElementBox = titleTextElement.getBBox();
     const leftMargin = titleTextElementBox.x + titleTextElementBox.width;
@@ -41,8 +38,8 @@ const Visualization = ({
     if (data.length == 0) return;
 
     const valueRange = extent(data, d => d.value);
-    const yRange = getYRange();
-    const xRange = getXRange();
+    const yRange = getYRange(size);
+    const xRange = getXRange(size);
 
     /*
     // We need to calculate how much we have left for each element
@@ -136,9 +133,11 @@ const Chart = ({
     }, []);
 
     useEffect(() => {
-        if (containerRef.current) {
-            Visualization({element: containerRef.current, data: data, size: size});
+        if (!containerRef.current) {
+            return;
         }
+        
+        Visualization({element: containerRef.current, data: data, size: size});
     }, [data, size]);
 
     return (
