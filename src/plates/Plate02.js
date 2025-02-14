@@ -87,6 +87,9 @@ const Visualization = ({
                    .attr('height', yScale.bandwidth())
                    .attr('fill', '#DC143C')
                    .attr('rx', 2)
+                   .attr('stroke', '#654321')
+                   .attr('stroke-with', '1')
+                   .attr('stroke-opacity', '0.2')
                    .attr('fill-opacity', '0.4');
 
     parentSelection.select('.bar-filter')
