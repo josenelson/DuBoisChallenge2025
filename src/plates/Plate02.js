@@ -20,6 +20,8 @@ const maxBarWidth = 800;
 
 const xLabelSize = 40;
 
+const animationDelay = 150;
+
 const getYRange = (size) => {
     return [margins.top, size.height - (margins.bottom)];
 }
@@ -83,24 +85,30 @@ const Visualization = ({
     parentSelection.select('.bar')
                    .attr('x', xRange[0])
                    .attr('y', d => yScale(d.year))
-                   .attr('width', d => xScale(d.value))
+                   .attr('width', 0)
                    .attr('height', yScale.bandwidth())
                    .attr('fill', '#DC143C')
                    .attr('rx', 2)
                    .attr('stroke', '#654321')
                    .attr('stroke-with', '1')
                    .attr('stroke-opacity', '0.2')
-                   .attr('fill-opacity', '0.4');
+                   .attr('fill-opacity', '0.4')
+                   .transition()
+                        .delay((d, i) => i * animationDelay)
+                        .attr('width', d => xScale(d.value));
 
     parentSelection.select('.bar-filter')
                    .attr('x', xRange[0])
                    .attr('y', d => yScale(d.year))
-                   .attr('width', d => xScale(d.value))
+                   .attr('width', 0)
                    .attr('height', yScale.bandwidth())
                    .attr('fill', '#DC143C')
                    .attr('rx', 2)
                    .attr('filter', 'url(#filter-g9odhc_gqf-2)')
-                   .attr('fill-opacity', '1');
+                   .attr('fill-opacity', '1')
+                   .transition()
+                        .delay((d, i) => i * animationDelay)
+                        .attr('width', d => xScale(d.value));
 
     parentSelection.select('.year')
                    .attr('text-anchor', 'start')
@@ -110,8 +118,11 @@ const Visualization = ({
                    .attr('dy', yScale.bandwidth() / 2)
                    .attr('font-family', 'Charter')
                    .attr('letter-spacing', '-1')
-                   .attr('fill-opacity', '0.9')
-                   .text(d => d.year);
+                   .attr('fill-opacity', '0')
+                   .text(d => d.year)
+                   .transition()
+                        .delay((d, i) => i * animationDelay)
+                        .attr('fill-opacity', '0.9');
 
     parentSelection.select('.value')
                    .attr('text-anchor', 'start')
@@ -121,8 +132,11 @@ const Visualization = ({
                    .attr('dy', yScale.bandwidth() / 2)
                    .attr('font-family', 'Charter')
                    .attr('font-weight', 'bold')
-                   .attr('fill-opacity', (_, i) => shouldShowValue(i) ? '0.9' : '0')
-                   .text(d => Math.round(d.value));
+                   .attr('fill-opacity', 0)
+                   .text(d => Math.round(d.value))
+                   .transition()
+                        .delay((d, i) => (i + 1) * animationDelay)
+                        .attr('fill-opacity', (_, i) => shouldShowValue(i) ? '0.9' : '0');
 };
 
 const Chart = ({
