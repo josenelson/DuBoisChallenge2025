@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { scaleLinear, scaleBand, extent, select, easeCubic } from 'd3';
+import { scaleLinear, scaleBand, extent, select, easeCubic, format } from 'd3';
 import { getSource02 } from '../util/data';
 import Background from '../components/Background';
 
@@ -59,6 +59,8 @@ const Visualization = ({
     const xScale = scaleLinear([0, valueRange[1]], [0, xRange[1] - xRange[0]]);
 
     const shouldShowValue = index => index == 0 || index == data.length - 1; 
+
+    const valueFormatter = format(",");
 
     let parentSelection = select(element).selectAll('g.mark').data(data);
 
@@ -135,7 +137,7 @@ const Visualization = ({
                    .attr('font-family', 'Charter')
                    .attr('font-weight', 'bold')
                    .attr('fill-opacity', 0)
-                   .text(d => Math.round(d.value))
+                   .text(d => valueFormatter(Math.round(d.value)))
                    .transition()
                         .delay((d, i) => i * animationDelay)
                         .attr('fill-opacity', (_, i) => shouldShowValue(i) ? '0.9' : '0');
