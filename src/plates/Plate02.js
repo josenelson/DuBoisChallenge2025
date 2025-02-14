@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { scaleLinear, scaleBand, extent, select  } from 'd3';
+import { scaleLinear, scaleBand, extent, select, easeCubic } from 'd3';
 import { getSource02 } from '../util/data';
 import Background from '../components/Background';
 
@@ -95,6 +95,7 @@ const Visualization = ({
                    .attr('fill-opacity', '0.4')
                    .transition()
                         .delay((d, i) => i * animationDelay)
+                        .ease(easeCubic)
                         .attr('width', d => xScale(d.value));
 
     parentSelection.select('.bar-filter')
@@ -108,6 +109,7 @@ const Visualization = ({
                    .attr('fill-opacity', '1')
                    .transition()
                         .delay((d, i) => i * animationDelay)
+                        .ease(easeCubic)
                         .attr('width', d => xScale(d.value));
 
     parentSelection.select('.year')
@@ -135,7 +137,7 @@ const Visualization = ({
                    .attr('fill-opacity', 0)
                    .text(d => Math.round(d.value))
                    .transition()
-                        .delay((d, i) => (i + 1) * animationDelay)
+                        .delay((d, i) => i * animationDelay)
                         .attr('fill-opacity', (_, i) => shouldShowValue(i) ? '0.9' : '0');
 };
 
