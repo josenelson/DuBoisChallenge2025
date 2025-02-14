@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { scaleLinear, extent, select  } from 'd3';
+import { scaleLinear, scaleBand, extent, select  } from 'd3';
 import { getSource02 } from '../util/data';
 import Background from '../components/Background';
 
@@ -16,6 +16,8 @@ const TitleTextStyle = {
     font: "2em 'B52-ULC W00 ULC'"
 };
 
+const xLabelSize = 40;
+
 const getYRange = (size) => {
     return [margins.top, size.height - (margins.bottom)];
 }
@@ -25,7 +27,7 @@ const getXRange = (size) => {
     const titleTextElementBox = titleTextElement.getBBox();
     const leftMargin = titleTextElementBox.x + titleTextElementBox.width;
 
-    const xRange = [leftMargin + margins.left, size.width - margins.right];
+    const xRange = [leftMargin + margins.left, size.width - margins.right - xLabelSize];
 
     return xRange;
 }
@@ -41,82 +43,61 @@ const Visualization = ({
     const yRange = getYRange(size);
     const xRange = getXRange(size);
 
-    /*
-    // We need to calculate how much we have left for each element
-    let scaleAdjusment = 1;
-    let remainingItemHeight = (yRange[1] - yRange[0] - (labelTextSize * data.length) - (spacing * (data.length - 1))) / (data.length);
-    if (remainingItemHeight < elementHeight) {
-        scaleAdjusment = remainingItemHeight / elementHeight;
-    }
-
-    const resolvedElementHeight = elementHeight * scaleAdjusment;
-    const resolvedElementWidth = elementWidth * scaleAdjusment;
-
-    const scale = scaleLinear(dataRange, [scaleAdjusment, scaleAdjusment * 1.5]);
+    const yScale = scaleBand(data.map(d => d.year), yRange)
+                        .round(true)
+                        .paddingInner(0.12)
+                        .paddingOuter(0)
+                        .align(0);
+    const xScale = scaleLinear([0, valueRange[1]], [0, xRange[1] - xRange[0]]);
 
     let parentSelection = select(element).selectAll('g.mark').data(data);
-    
+
     parentSelection = parentSelection.join(
         enter => {
             const container = enter.append('g').classed('mark', true);
+           
+            container.append('rect')
+                     .classed('bar-filter', true);
 
-            const shapeContainer = container.append('g').classed('shape-container', true);
-            shapeContainer.append('path')
-                          .classed('shape-background', true)
-                          .attr('filter', 'url(#filter-72uyj5y9zw-2)')
-                          .attr('d', BagOfMoney150x138);
+            container.append('rect')
+                     .classed('bar', true);
 
-            shapeContainer.append('path')
-                          .classed('shape-foreground', true)
-                          .attr('fill', '#654321')
-                          .attr('fill-opacity', '0.4')
-                          .attr('stroke', '#654321')
-                          .attr('stroke-width', '1')
-                          .attr('d', BagOfMoney150x138);
-
-            container.append('text').classed('value', true);
-            container.append('text').classed('year', true);
-
+            container.append('text')
+                     .classed('year', true);
+           
             return container;
         }
-    ).attr('transform', (d, i) => `translate(${xPosition} ${yPosition(i)})`);
+    );
 
-    // Returns the transform for position and scale of each one of the money bags
-    const transform = (d) => {
-        const widthRatio = scale(d.value);
-        const heightRatio = scaleAdjusment;
-        const xAdjustment = (elementWidth * widthRatio) / 2;// (resolvedElementWidth * widthRatio) / 2;
+    parentSelection.select('.bar')
+                   .attr('x', xRange[0])
+                   .attr('y', d => yScale(d.year))
+                   .attr('width', d => xScale(d.value))
+                   .attr('height', yScale.bandwidth())
+                   .attr('fill', '#DC143C')
+                   .attr('rx', 2)
+                   .attr('fill-opacity', '0.4');
 
-        return `translate(${-xAdjustment} 0) scale(${widthRatio} ${heightRatio}) `;
-    }
+    parentSelection.select('.bar-filter')
+                   .attr('x', xRange[0])
+                   .attr('y', d => yScale(d.year))
+                   .attr('width', d => xScale(d.value))
+                   .attr('height', yScale.bandwidth())
+                   .attr('fill', '#DC143C')
+                   .attr('rx', 2)
+                   .attr('filter', 'url(#filter-g9odhc_gqf-2)')
+                   .attr('fill-opacity', '1');
 
-    // Properties for money bags
-    parentSelection.select('.shape-background')
-                   .attr('transform', transform);
-
-    parentSelection.select('.shape-foreground')
-                   .attr('transform', transform);
-
-    // Properties for the year text
-    parentSelection.select('.value')
-                   .attr('y', resolvedElementHeight / 2)
-                   .attr('text-anchor', 'middle')
-                   .attr('alignment-baseline', 'hanging')
-                   .attr('font-family', 'Charter')
-                   .attr('font-weight', 'bold')
-                   .attr('fill-opacity', '0.9')
-                   .text(d => `$${d.value}`);
-
-    // Properties for the value text
     parentSelection.select('.year')
-                   .attr('y', resolvedElementHeight + 8)
-                   .attr('text-anchor', 'middle')
-                   .attr('alignment-baseline', 'hanging')
+                   .attr('text-anchor', 'start')
+                   .attr('alignment-baseline', 'middle')
+                   .attr('x', d => xRange[0] + xScale(d.value) + 10)
+                   .attr('y', d => yScale(d.year))
+                   .attr('dy', yScale.bandwidth() / 2)
                    .attr('font-family', 'Charter')
                    .attr('letter-spacing', '-1')
-                   .attr('fill-opacity', '0.6')
+                   .attr('fill-opacity', '0.9')
                    .text(d => d.year);
-                   */
 };
 
 const Chart = ({
@@ -136,19 +117,19 @@ const Chart = ({
         if (!containerRef.current) {
             return;
         }
-        
+
         Visualization({element: containerRef.current, data: data, size: size});
     }, [data, size]);
 
     return (
         <svg className='plate'>
             <defs>
-                <filter x="-5.6%" y="-6.3%" width="111.3%" height="112.7%" filterUnits="objectBoundingBox" id="filter-72uyj5y9zw-2">
+                <filter x="-4.0%" y="-13.9%" width="108.0%" height="127.9%" filterUnits="objectBoundingBox" id="filter-g9odhc_gqf-2">
                     <feMorphology radius="5" operator="erode" in="SourceAlpha" result="shadowSpreadInner1"></feMorphology>
                     <feGaussianBlur stdDeviation="5" in="shadowSpreadInner1" result="shadowBlurInner1"></feGaussianBlur>
                     <feOffset dx="1" dy="0" in="shadowBlurInner1" result="shadowOffsetInner1"></feOffset>
                     <feComposite in="shadowOffsetInner1" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="shadowInnerInner1"></feComposite>
-                    <feColorMatrix values="0 0 0 0 0.396078431   0 0 0 0 0.262745098   0 0 0 0 0.129411765  0 0 0 0.228529283 0" type="matrix" in="shadowInnerInner1"></feColorMatrix>
+                    <feColorMatrix values="0 0 0 0 0.396078431   0 0 0 0 0.262745098   0 0 0 0 0.129411765  0 0 0 0.703261582 0" type="matrix" in="shadowInnerInner1"></feColorMatrix>
                 </filter>
             </defs>
             <g>
