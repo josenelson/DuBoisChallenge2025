@@ -16,6 +16,8 @@ const TitleTextStyle = {
     font: "2em 'B52-ULC W00 ULC'"
 };
 
+const maxBarWidth = 800;
+
 const xLabelSize = 40;
 
 const getYRange = (size) => {
@@ -28,6 +30,10 @@ const getXRange = (size) => {
     const leftMargin = titleTextElementBox.x + titleTextElementBox.width;
 
     const xRange = [leftMargin + margins.left, size.width - margins.right - xLabelSize];
+
+    if (xRange[1] - xRange[0] > maxBarWidth) {
+        xRange[1] = xRange[0] + maxBarWidth;
+    }
 
     return xRange;
 }
@@ -50,6 +56,8 @@ const Visualization = ({
                         .align(0);
     const xScale = scaleLinear([0, valueRange[1]], [0, xRange[1] - xRange[0]]);
 
+    const shouldShowValue = index => index == 0 || index == data.length - 1; 
+
     let parentSelection = select(element).selectAll('g.mark').data(data);
 
     parentSelection = parentSelection.join(
@@ -64,6 +72,9 @@ const Visualization = ({
 
             container.append('text')
                      .classed('year', true);
+
+            container.append('text')
+                     .classed('value', true);
            
             return container;
         }
@@ -98,6 +109,17 @@ const Visualization = ({
                    .attr('letter-spacing', '-1')
                    .attr('fill-opacity', '0.9')
                    .text(d => d.year);
+
+    parentSelection.select('.value')
+                   .attr('text-anchor', 'start')
+                   .attr('alignment-baseline', 'middle')
+                   .attr('x', d => xRange[0] + 5)
+                   .attr('y', d => yScale(d.year))
+                   .attr('dy', yScale.bandwidth() / 2)
+                   .attr('font-family', 'Charter')
+                   .attr('font-weight', 'bold')
+                   .attr('fill-opacity', (_, i) => shouldShowValue(i) ? '0.9' : '0')
+                   .text(d => Math.round(d.value));
 };
 
 const Chart = ({
