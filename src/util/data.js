@@ -13,5 +13,17 @@ const getSource01 = async function() {
     return transformedData;
 }
 
+const getSource02 = async function() {
+    const data = await csv("./data02.csv");
 
-export { getSource01 };
+    const transformedData = data.map(d => {
+        return {
+            year: d.Date * 1,
+            value: d.Land * 1
+        }
+    });
+
+    return transformedData;
+}
+
+export { getSource01, getSource02 };

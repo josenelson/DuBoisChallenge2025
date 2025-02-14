@@ -1,5 +1,6 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { scaleLinear, extent, select  } from 'd3';
+import { getSource01 } from '../util/data';
 import Background from '../components/Background';
 import { BagOfMoney150x138 } from '../components/Shapes';
 
@@ -35,7 +36,6 @@ const Visualization = ({
     if (remainingItemHeight < elementHeight) {
         scaleAdjusment = remainingItemHeight / elementHeight;
     }
-    //TODO: Nelson need to add a mininum
 
     const resolvedElementHeight = elementHeight * scaleAdjusment;
     const resolvedElementWidth = elementWidth * scaleAdjusment;
@@ -107,12 +107,17 @@ const Visualization = ({
 };
 
 const Chart = ({
-    data,
     size
 }) => {
     const containerRef = useRef(null);
-    
-    data = data.sort((a, b) => a.year - b.year);
+    const [data, setData] = useState([]);
+
+    useEffect(() => {
+        getSource01().then(data => {
+            const sortedData = data.sort((a, b) => a.year - b.year)
+            setData(sortedData)
+        });
+    }, []);
 
     useEffect(() => {
         if (containerRef.current) {

@@ -1,19 +1,18 @@
 import React, {useEffect, useState} from "react";
-import Container from "./components/Container";
+import { BrowserRouter, Route, Routes } from "react-router";
+import withContainer from "./components/ContainerWrapper";
 import Plate01 from './plates/Plate01';
+import Plate02 from './plates/Plate02';
 import { getSource01 } from './util/data';
 
 const App = () => {
-    const [data, setData] = useState([]);
-
-    useEffect(() => {
-        getSource01().then(setData);
-    }, []);
-    
     return (
-        <Container>
-            <Plate01 data={data} />
-        </Container>
+        <BrowserRouter>
+            <Routes>
+                <Route index path="/plate01?" element={withContainer(<Plate01 />)} />
+                <Route path="/plate02" element={withContainer(<Plate02 />)} />
+            </Routes>
+        </BrowserRouter>
     );
 
 }
