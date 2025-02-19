@@ -1,6 +1,17 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { scaleLinear, scaleBand, extent, select, easeCubic, format, json, geoMercator, geoPath } from 'd3';
-import { getSource03 } from '../util/data';
+import { 
+    scaleLinear, 
+    scaleBand, 
+    extent, 
+    select, 
+    easeCubic, 
+    format, 
+    json, 
+    geoAlbersUsa, 
+    geoPath, 
+    geoIdentity 
+} from 'd3';
+import { getSource03, getShape03 } from '../util/data';
 import Background from '../components/Background';
 
 const margins = {
@@ -53,14 +64,22 @@ const Visualization = ({
     const yRange = getYRange(size);
     const xRange = getXRange(size);
 
-    const projection = geoMercator().fitSize([400, 400], geoData);
+    const projection = geoIdentity().reflectY(true).fitSize([400, 400], geoData);
     const path = geoPath().projection(projection);
 
-    const shapeSelection = select(element).selectAll('path.mark').data(geoData.features);
+    const { geometries } = geoData;
+    const shapeSelection = select(element).selectAll('path.mark').data(geometries);
 
     shapeSelection.enter()
                   .append('path')
-                  .attr('d', path)
+                  .attr('d', (d) => {
+                        return path(d);
+                   })
+                  .attr('fill', (d, i) => {
+                        if (i == 0) return 'green';
+                        return 'red';
+                    })
+                  .attr('stroke-width', '1')
                   .attr('stroke', 'black');
 };
 
@@ -79,9 +98,7 @@ const Chart = ({
     }, []);
 
     useEffect(() => {
-        json('./plate03/data.json').then(geoData => {
-            setGeoData(geoData);
-        });
+        getShape03().then(setGeoData);
     }, []);
 
     useEffect(() => {

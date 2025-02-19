@@ -1,7 +1,7 @@
-import { csv } from 'd3';
+import { csv, json } from 'd3';
 
 const getSource01 = async function() {
-    const data = await csv("./data01.csv");
+    const data = await csv("/data01.csv");
 
     const transformedData = data.map(d => {
         return {
@@ -14,7 +14,7 @@ const getSource01 = async function() {
 }
 
 const getSource02 = async function() {
-    const data = await csv("./data02.csv");
+    const data = await csv("/data02.csv");
 
     const transformedData = data.map(d => {
         return {
@@ -26,4 +26,23 @@ const getSource02 = async function() {
     return transformedData;
 }
 
-export { getSource01, getSource02 };
+const getSource03 = async function() {
+    const data = await csv("/data03.csv");
+
+    const transformedData = data.map(d => {
+        return {
+            county: d['County1890'],
+            acres: d['Acres 1899']
+        }
+    });
+
+    return transformedData;
+}
+
+const getShape03 = async function(params) {
+    const shapeData = await json('/data03.geo.json');
+
+    return shapeData;
+}
+
+export { getSource01, getSource02, getSource03, getShape03 };
