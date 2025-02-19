@@ -11,7 +11,7 @@ import {
     geoPath, 
     geoIdentity 
 } from 'd3';
-import { getSource03, getShape03 } from '../util/data';
+import { getSource03, getShape03, getCountyData03 } from '../util/data';
 import Background from '../components/Background';
 
 const margins = {
@@ -27,11 +27,6 @@ const TitleTextStyle = {
     font: "2em 'B52-ULC W00 ULC'"
 };
 
-const maxBarWidth = 800;
-
-const xLabelSize = 40;
-
-const animationDelay = 150;
 
 const getYRange = (size) => {
     return [margins.top, size.height - (margins.bottom)];
@@ -42,11 +37,7 @@ const getXRange = (size) => {
     const titleTextElementBox = titleTextElement.getBBox();
     const leftMargin = titleTextElementBox.x + titleTextElementBox.width;
 
-    const xRange = [leftMargin + margins.left, size.width - margins.right - xLabelSize];
-
-    if (xRange[1] - xRange[0] > maxBarWidth) {
-        xRange[1] = xRange[0] + maxBarWidth;
-    }
+    const xRange = [leftMargin + margins.left, size.width - margins.right];
 
     return xRange;
 }
@@ -55,32 +46,55 @@ const Visualization = ({
     element, 
     size,
     data,
-    geoData
+    geoData,
+    countyData
 }) => {
     if (data.length == 0) return;
     if (!geoData) return;
+    if (!countyData) return;
 
+    // Data ranges
     const valueRange = extent(data, d => d.value);
     const yRange = getYRange(size);
     const xRange = getXRange(size);
+    const visualizationSize = [xRange[1] - xRange[0], yRange[1] - yRange[0]];
 
-    const projection = geoIdentity().reflectY(true).fitSize([400, 400], geoData);
+    // Geometries
+    const projection = geoIdentity().reflectY(true).fitSize(visualizationSize, geoData);
     const path = geoPath().projection(projection);
 
     const { geometries } = geoData;
-    const shapeSelection = select(element).selectAll('path.mark').data(geometries);
 
-    shapeSelection.enter()
-                  .append('path')
-                  .attr('d', (d) => {
-                        return path(d);
-                   })
-                  .attr('fill', (d, i) => {
-                        if (i == 0) return 'green';
-                        return 'red';
-                    })
-                  .attr('stroke-width', '1')
-                  .attr('stroke', 'black');
+    // Selections
+    const parentSelection = select(element);
+
+    let container = parentSelection.selectAll('g.container')
+                                     .data([data])
+                                     .join(
+                                        enter => {
+                                            const selection = enter.append('g')
+                                                                   .classed('container', true);
+                                            return selection;
+                                        }
+                                     );
+
+    container.attr('transform', `translate(${xRange[0]}, ${yRange[0]})`);
+
+    const geoSelection = container.selectAll('path.mark').data(geometries);
+
+    geoSelection.enter()
+                .append('path')
+                .classed('mark', true)
+                .merge(geoSelection)
+                .attr('d', path)
+                .attr('fill', (d, i) => {
+                    if (i == 0) return 'green';
+                    return 'red';
+                })
+                .attr('stroke-width', '1')
+                .attr('stroke', 'black')
+                .attr('dx', 100)
+                .attr('dy', 100);
 };
 
 const Chart = ({
@@ -89,16 +103,22 @@ const Chart = ({
     const containerRef = useRef(null);
     const [data, setData] = useState([]);
     const [geoData, setGeoData] = useState(null);
+    const [countyData, setCountyData] = useState([]);
 
     useEffect(() => {
-        getSource03().then(data => {
-            const sortedData = data.sort((a, b) => a.year - b.year)
-            setData(sortedData)
-        });
-    }, []);
+        async function fetchData() {
+            const [
+                dataResult,
+                geoDataResult,
+                countyDataResult
+            ] = await Promise.all([getSource03(), getShape03(), getCountyData03()]);
+    
+            setData(dataResult);
+            setGeoData(geoDataResult);
+            setCountyData(countyDataResult);
+        }
 
-    useEffect(() => {
-        getShape03().then(setGeoData);
+        fetchData();
     }, []);
 
     useEffect(() => {
@@ -110,6 +130,7 @@ const Chart = ({
             element: containerRef.current, 
             data: data, 
             geoData: geoData,
+            countyData: countyData,
             size: size
         });
     }, [data, size]);

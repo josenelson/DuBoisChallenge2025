@@ -39,10 +39,23 @@ const getSource03 = async function() {
     return transformedData;
 }
 
-const getShape03 = async function(params) {
+const getShape03 = async function() {
     const shapeData = await json('/data03.geo.json');
 
     return shapeData;
 }
 
-export { getSource01, getSource02, getSource03, getShape03 };
+const getCountyData03 = async function() {
+    let countyData = await csv('/data03.counties.csv');
+
+    countyData = countyData.map(d => {
+        return {
+            county: d['County1890'],
+            blackPopulation: (d['Black population 1890'] || 0) * 1
+        };
+    });
+
+    return countyData;
+}
+
+export { getSource01, getSource02, getSource03, getShape03, getCountyData03 };
