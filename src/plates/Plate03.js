@@ -80,21 +80,40 @@ const Visualization = ({
 
     container.attr('transform', `translate(${xRange[0]}, ${yRange[0]})`);
 
-    const geoSelection = container.selectAll('path.mark').data(geometries);
+    const geoSelectionPaths = container.selectAll('path.mark').data(geometries);
+    const geoSelectionLabels = container.selectAll('text.mark').data(geometries);
 
-    geoSelection.enter()
-                .append('path')
-                .classed('mark', true)
-                .merge(geoSelection)
-                .attr('d', path)
-                .attr('fill', (d, i) => {
-                    if (i == 0) return 'green';
-                    return 'red';
-                })
-                .attr('stroke-width', '1')
-                .attr('stroke', 'black')
-                .attr('dx', 100)
-                .attr('dy', 100);
+    // Paths for map
+    geoSelectionPaths.enter()
+                     .append('path')
+                     .classed('mark', true)
+                     .merge(geoSelectionPaths)
+                     .attr('d', path)
+                     .attr('fill', (d, i) => {
+                        if (i == 0) return 'green';
+                        return 'red';
+                     })
+                     .attr('stroke-width', '1')
+                     .attr('stroke', 'black')
+                     .attr('dx', 100)
+                     .attr('dy', 100);
+
+    // Labels for map
+    geoSelectionLabels.enter()
+                      .append('text')
+                      .classed('mark', true)
+                      .merge(geoSelectionLabels)
+                      .attr('x', d => {
+                            return path.centroid(d)[0];
+                      })
+                      .attr('y', d => {
+                            return path.centroid(d)[1];
+                      })
+                      .attr('text-anchor', 'middle')
+                      .attr('alignment-baseline', 'middle')
+                      .text((d, i) => {
+                            return data[i].acres;
+                      });
 };
 
 const Chart = ({
