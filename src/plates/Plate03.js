@@ -21,7 +21,7 @@ const margins = {
     right: 20
 }
 
-const titleText = "Acres of \nland \nowned by \nBlack \nGeorgians";
+const titleText = "WIP \nVisualization"; //"Acres of \nland \nowned by \nBlack \nGeorgians";
 
 const TitleTextStyle = {
     font: "2em 'B52-ULC W00 ULC'"
@@ -57,8 +57,25 @@ const Visualization = ({
     const valueRange = extent(data, d => d.value);
     const yRange = getYRange(size);
     const xRange = getXRange(size);
-    const visualizationSize = [xRange[1] - xRange[0], yRange[1] - yRange[0]];
+    
+    const startX = xRange[0];
+    const startY = yRange[0];
+    const maxWidth = xRange[1] - xRange[0];
+    const maxHeight = yRange[1] - yRange[0];
+    const visualizationSize = [maxWidth, maxHeight];
+    const midX = (xRange[1] - xRange[0]) / 2;
+    const midY = (yRange[1] - yRange[0]) / 2;
 
+    const isoTransform = ({
+        x = startX, 
+        y = startY, 
+        midX = midX,
+        midY = midY, 
+        angle = 30
+    }) => `translate(${x} ${y}) rotate(${angle} ${midX} ${midY})`; // missing skewX(-${angle})
+
+    const adjustedSize = (size, angle) => size * Math.cos((angle / 180) * Math.PI);
+    
     // Geometries
     const projection = geoIdentity().reflectY(true).fitSize(visualizationSize, geoData);
     const path = geoPath().projection(projection);
@@ -77,26 +94,81 @@ const Visualization = ({
                                             return selection;
                                         }
                                      );
+    
+    let isoMetricContainer = container.selectAll('g.isometric-container')
+                                      .data([data])
+                                      .join(
+                                        enter => {
+                                            const selection = enter.append('g')
+                                                                   .classed('isometric-container', true);
+                                            return selection;
+                                        }
+                                       );                                 
+        
+    isoMetricContainer.attr('transform', isoTransform({
+        x: startX,
+        y: startY, 
+        midX: midX,
+        midY: midY,
+        angle: 30
+    }));
 
-    container.attr('transform', `translate(${xRange[0]}, ${yRange[0]})`);
+    const geoSelectionPaths = isoMetricContainer.selectAll('path.mark').data(geometries);
+    const geoSelectionLabels = isoMetricContainer.selectAll('text.mark').data(geometries);
 
-    const geoSelectionPaths = container.selectAll('path.mark').data(geometries);
-    const geoSelectionLabels = container.selectAll('text.mark').data(geometries);
+    /* Test layout */
+    (() => {
+        const layoutSelection = container.selectAll('rect.layout').data([0, 5, 10/*, 15, 20, 25, 30, 35, 40, 45*/]).join(
+            enter => {
+                const result = enter.append('rect')
+                                    .attr('stroke-width', 1) 
+                                    .attr('stroke-opacity', d => (100 - d) / 100)
+                                    .attr('stroke', 'black')
+                                    .attr('fill', 'none')
+                                    .attr('data-angle', d => d)
+                                    .classed('layout', true);
+                
+                return result;
+            }
+        );
+    
+        layoutSelection.attr('x', 0)
+                       .attr('y', 0)
+                       .attr('width', angle => adjustedSize(maxWidth, angle))
+                       .attr('height', angle => adjustedSize(maxHeight, angle))
+                       .attr('transform', angle => {
+                            const newWidth = adjustedSize(maxWidth, angle);
+                            const newHeight = adjustedSize(maxHeight, angle);
+
+                            const adjustedStartX = startX + (maxWidth - newWidth);
+                            const adjustedStartY = startY + (maxHeight - newHeight);
+
+                            return isoTransform({
+                                x: adjustedStartX,
+                                y: adjustedStartY,
+                                midX: newWidth / 2, 
+                                midY: newHeight / 2, 
+                                angle: angle}
+                            );
+                        });
+    
+
+                       // 0 -> 1 , 45 -> 0.5
+        /* END: Test layout */
+    })();
+    
 
     // Paths for map
+    return; //test, not to be bothered for now
     geoSelectionPaths.enter()
                      .append('path')
                      .classed('mark', true)
                      .merge(geoSelectionPaths)
                      .attr('d', path)
-                     .attr('fill', (d, i) => {
-                        if (i == 0) return 'green';
-                        return 'red';
-                     })
+                     .attr('fill', '#DC143C')
+                     .attr('fill-opacity', '0.9')
                      .attr('stroke-width', '1')
-                     .attr('stroke', 'black')
-                     .attr('dx', 100)
-                     .attr('dy', 100);
+                     .attr('stroke', 'black');
 
     // Labels for map
     geoSelectionLabels.enter()
@@ -113,7 +185,8 @@ const Visualization = ({
                       .attr('alignment-baseline', 'middle')
                       .text((d, i) => {
                             return data[i].acres;
-                      });
+                      })
+                      .attr('opacity', 0);
 };
 
 const Chart = ({
