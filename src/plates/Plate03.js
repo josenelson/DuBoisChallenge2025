@@ -13,6 +13,7 @@ import {
 } from 'd3';
 import { getSource03, getShape03, getCountyData03 } from '../util/data';
 import Background from '../components/Background';
+import { radians } from '../util/math';
 
 const margins = {
     top: 20,
@@ -71,10 +72,9 @@ const Visualization = ({
         y = startY, 
         midX = midX,
         midY = midY, 
-        angle = 30
-    }) => `translate(${x} ${y}) rotate(${angle} ${midX} ${midY})`; // missing skewX(-${angle})
-
-    const adjustedSize = (size, angle) => size * Math.cos((angle / 180) * Math.PI);
+        angle = 30,
+        scale = 1
+    }) => `translate(${x} ${y}) rotate(${angle} ${midX} ${midY}) skewX(-${angle}) `;
     
     // Geometries
     const projection = geoIdentity().reflectY(true).fitSize(visualizationSize, geoData);
@@ -118,7 +118,15 @@ const Visualization = ({
 
     /* Test layout */
     (() => {
-        const layoutSelection = container.selectAll('rect.layout').data([0, 5, 10/*, 15, 20, 25, 30, 35, 40, 45*/]).join(
+        const ratio = maxWidth / maxHeight;
+        const newWidth = (angle) => {
+            return maxWidth - (maxHeight * Math.sin(radians(angle)));
+        }
+        const newHeight = (angle) => {
+            return maxHeight - (maxWidth * Math.sin(radians(angle)));
+        }
+
+        const layoutSelection = container.selectAll('rect.layout').data([0,10, 30, 90]).join(
             enter => {
                 const result = enter.append('rect')
                                     .attr('stroke-width', 1) 
@@ -134,22 +142,21 @@ const Visualization = ({
     
         layoutSelection.attr('x', 0)
                        .attr('y', 0)
-                       .attr('width', angle => adjustedSize(maxWidth, angle))
-                       .attr('height', angle => adjustedSize(maxHeight, angle))
+                       .attr('width', maxWidth)
+                       .attr('height', maxHeight)
                        .attr('transform', angle => {
-                            const newWidth = adjustedSize(maxWidth, angle);
-                            const newHeight = adjustedSize(maxHeight, angle);
+                            const isoMatrix = new DOMMatrixReadOnly()
+                                .translate(startX, startY)
+                                .rotate(angle)
+                                .skewX(-angle);
 
-                            const adjustedStartX = startX + (maxWidth - newWidth);
-                            const adjustedStartY = startY + (maxHeight - newHeight);
+                            const edge1 = isoMatrix.transformPoint(new DOMPoint(startX, startY + maxHeight, 0, 0));
+                            const edge2 = isoMatrix.transformPoint(new DOMPoint(startX + maxWidth, startY + maxHeight, 0, 0));
 
-                            return isoTransform({
-                                x: adjustedStartX,
-                                y: adjustedStartY,
-                                midX: newWidth / 2, 
-                                midY: newHeight / 2, 
-                                angle: angle}
-                            );
+                            const invertedMatrix = isoMatrix.inverse();
+                            const newWidth = isoMatrix.transformPoint(new DOMPoint(maxWidth, maxHeight, 0, 0));
+
+                            return isoMatrix.toString();
                         });
     
 
@@ -239,7 +246,7 @@ const Chart = ({
                 </filter>
             </defs>
             <g>
-                <Background />
+                {/*<Background />*/}
                 <text 
                     id="titleText"
                     style={TitleTextStyle}
