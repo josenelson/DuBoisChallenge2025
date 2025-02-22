@@ -32,7 +32,7 @@ const getSource03 = async function() {
     const transformedData = data.map(d => {
         return {
             county: d['County1890'],
-            acres: d['Acres 1899']
+            acres: d['Acres 1899'] * 1
         }
     });
 
@@ -51,7 +51,7 @@ const getCountyData03 = async function() {
     countyData = countyData.map(d => {
         return {
             county: d['County1890'],
-            blackPopulation: (d['Black population 1890'] || 0) * 1
+            acresOwnedPercentage: (d['Acres 1899/Area sq mi'] || '').replace('%', '') * 1
         };
     });
 
