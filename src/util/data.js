@@ -39,19 +39,6 @@ const getSource03 = async function() {
     return transformedData;
 }
 
-const getSource04 = async function() {
-    const data = await csv("/data04.csv");
-
-    const transformedData = data.map(d => {
-        return {
-            year: d['Year'] * 1,
-            value: d['Property Valuation'] * 1
-        }
-    });
-
-    return transformedData;
-}
-
 const getShape03 = async function() {
     const shapeData = await json('/data03.geo.json');
 
@@ -69,6 +56,19 @@ const getCountyData03 = async function() {
     });
 
     return countyData;
+}
+
+const getSource04 = async function() {
+    const data = await csv("/data04.csv");
+
+    const transformedData = data.map(d => {
+        return {
+            year: d['Year'] * 1,
+            value: d['Property Valuation'] * 1
+        }
+    });
+
+    return transformedData;
 }
 
 export { 
