@@ -100,7 +100,7 @@ const Visualization = ({
                 .attr('fill', '#DC143C')
                 .attr('rx', 2)
                 .attr('stroke', '#654321')
-                .attr('stroke-with', '1')
+                .attr('stroke-width', '1')
                 .attr('stroke-opacity', '0.2')
                 .attr('fill-opacity', '0.4')
                 .transition()

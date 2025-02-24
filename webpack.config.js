@@ -14,7 +14,7 @@ module.exports = {
         hot: true,
         liveReload: true,
         historyApiFallback: {
-        index: 'index.html'
+            index: 'index.html'
         }
     },
     resolve: {
