@@ -238,8 +238,7 @@ const Visualization = ({
                    .attr('transform', d => {
                         const midX = Math.floor((d.year + (d.year + d.duration)) / 2);
                         const x = xScale(midX);
-
-                        const year = d.year;
+                        
                         let [yearData] = data.filter(d => d.year == midX);
                         if (!yearData) return;
 
