@@ -53,15 +53,12 @@ const Visualization = ({
     const yRange = getYRange(size);
     const xRange = getXRange(size);
     
-    const visualizationSize = [xRange[1] - xRange[0], yRange[1] - yRange[0]];
-
     // Scales
     const xScale = scaleLinear(yearRange, xRange);
-    const yScale = scaleLinear(valueRange, yRange);
+    const yScale = scaleLinear(valueRange, [yRange[1], yRange[0]]);
 
     // Line generator
-    const line = line(d => xScale(year(d)), d => yScale(value(d)));
-    //svg.append("path").attr("d", line(data)).attr("stroke", "currentColor")
+    const linePath = line(d => xScale(year(d)), d => yScale(value(d)));
 
     // State
     let selectedIndex = -1;
@@ -79,7 +76,7 @@ const Visualization = ({
                                         }
                                      );
 
-    container.attr('transform', `translate(${xRange[0]}, ${yRange[0]})`);
+    //container.attr('transform', `translate(${xRange[0]}, ${yRange[0]})`);
 
     const lineSelection = container.selectAll('path.mark').data([data]);
 
@@ -87,8 +84,9 @@ const Visualization = ({
                  .append('path')
                  .classed('mark', true)
                  .merge(lineSelection)
-                 .attr('d', d => line(d))
+                 .attr('d', d => linePath(d))
                  .attr('stroke', 'black')
+                 .attr('fill', 'none')
                  .attr('stroke-width', 2); // TODO: Need to flip the coordindates
 
 };
@@ -116,9 +114,7 @@ const Chart = ({
 
         Visualization({
             element: containerRef.current, 
-            data: data, 
-            geoData: geoData,
-            countyData: countyData,
+            data: data,
             size: size
         });
     }, [data, size]);
