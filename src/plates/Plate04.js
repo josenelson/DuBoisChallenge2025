@@ -17,6 +17,39 @@ const margins = {
 
 const titleText = "WIP \nVisualization"; //"Acres of \nland \nowned by \nBlack \nGeorgians \n1970-1900";
 
+const events = [
+    {
+        title: 'Klu-Kluxism',
+        year: 1872,
+        duration: 0
+    },
+    {
+        title: 'Political unrest',
+        year: 1875,
+        duration: 5
+    },
+    {
+        title: 'Rise of the new industrialism',
+        year: 1880,
+        duration: 10
+    },
+    {
+        title: 'Lynching',
+        year: 1890,
+        duration: 5
+    },
+    {
+        title: 'Finantial panic',
+        year: 1894,
+        duration: 0
+    },
+    {
+        title: 'Disfranchisment and proscriptive laws',
+        year: 1894,
+        duration: 6
+    }
+];
+
 const TitleTextStyle = {
     font: "2em 'B52-ULC W00 ULC'"
 };
@@ -142,6 +175,83 @@ const Visualization = ({
                       .attr('fill', 'none')
                       .attr('stroke-width', 2)
                       .attr('stroke', 'black');
+
+    // Text for the xAxis
+    const xAxisTextSelection = container.selectAll('text.x-axis').data(xTicks);
+
+    xAxisTextSelection.enter()
+                      .append('text')
+                      .classed('x-axis', true)
+                      .merge(xAxisTextSelection)
+                      .attr('text-anchor', 'middle')
+                      .attr('alignment-baseline', 'hanging')
+                      .attr('font-family', 'Charter')
+                      .attr('font-weight', 'bold')
+                      .attr('fill-opacity', 0.9)
+                      .attr('font-size', 11)
+                      .attr('x', xScale)
+                      .attr('y', yScale(yTicks[0]) + 3)
+                      .text(d => d);
+
+    // Text for the yAxis
+    const yAxisTextSelection = container.selectAll('text.y-axis').data(yTicks);
+
+    yAxisTextSelection.enter()
+                      .append('text')
+                      .classed('y-axis', true)
+                      .merge(yAxisTextSelection)
+                      .attr('text-anchor', 'end')
+                      .attr('alignment-baseline', 'middle')
+                      .attr('font-family', 'Charter')
+                      .attr('font-weight', 'bold')
+                      .attr('fill-opacity', 0.9)
+                      .attr('font-size', 11)
+                      .attr('x', xScale(xTicks[0]) - 3)
+                      .attr('y', d => yScale(d))
+                      .text(d => d);
+
+    // Text for events
+    const eventsSelection = container.selectAll('events').data(events);
+
+    eventsSelection.enter()
+                   .append('text')
+                   .classed('events', true)
+                   .merge(eventsSelection)
+                   .attr('text-anchor', d => {
+                        if (d.duration == 0) {
+                            return 'end';
+                        }
+                        return 'middle';
+                    })
+                   .attr('dx', d => {
+                        if (d.duration == 0) {
+                            return '-2em';
+                        }
+
+                        return 0;
+                   })
+                   .attr('alignment-baseline', 'middle')
+                   .attr('font-family', 'Charter')
+                   .attr('font-weight', 'thin')
+                   .attr('fill-opacity', 0.9)
+                   .attr('font-size', 14)
+                   .attr('transform', d => {
+                        const midX = Math.floor((d.year + (d.year + d.duration)) / 2);
+                        const x = xScale(midX);
+
+                        const year = d.year;
+                        let [yearData] = data.filter(d => d.year == midX);
+                        if (!yearData) return;
+
+                        const y = yScale(yearData.value);
+
+                        if (d.duration == 0) {
+                            return `translate(${x}, ${y}) rotate(-90)`;
+                        }
+
+                        return `translate(${x}, ${y})`;
+                   })
+                   .text(d => d.title.toLocaleUpperCase());
 
     // Main line (this has the be the last thing on the view hirarchy so it stays above everything else)
     const lineSelection = container.selectAll('path.mark').data([data]);
