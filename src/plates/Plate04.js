@@ -3,7 +3,8 @@ import {
     scaleLinear, 
     line, 
     extent, 
-    select
+    select,
+    curveNatural
 } from 'd3';
 import { getSource04 } from '../util/data';
 import Background from '../components/Background';
@@ -49,6 +50,8 @@ const events = [
         duration: 6
     }
 ];
+
+const definedDataRange = [1875, 1899];
 
 const TitleTextStyle = {
     font: "2em 'B52-ULC W00 ULC'"
@@ -111,10 +114,9 @@ const Visualization = ({
     let yTicks = getYTicks(yScale);
 
     // Line generator
-    const linePath = line(d => xScale(year(d)), d => yScale(value(d)));
-
-    // State
-    let selectedIndex = -1;
+    const isDefined = d => d.year >= definedDataRange[0] && d.year <= definedDataRange[1];
+    const linePath = line(d => xScale(year(d)), d => yScale(value(d))).curve(curveNatural);
+    const definedLinePath = line(d => xScale(year(d)), d => yScale(value(d))).curve(curveNatural).defined(isDefined);
 
     // Selections
     const parentSelection = select(element);
@@ -238,7 +240,7 @@ const Visualization = ({
                    .attr('transform', d => {
                         const midX = Math.floor((d.year + (d.year + d.duration)) / 2);
                         const x = xScale(midX);
-                        
+
                         let [yearData] = data.filter(d => d.year == midX);
                         if (!yearData) return;
 
@@ -253,13 +255,25 @@ const Visualization = ({
                    .text(d => d.title.toLocaleUpperCase());
 
     // Main line (this has the be the last thing on the view hirarchy so it stays above everything else)
-    const lineSelection = container.selectAll('path.mark').data([data]);
+    const undefinedLineSelection = container.selectAll('path.mark-undefined').data([data]);
+
+    undefinedLineSelection.enter()
+                          .append('path')
+                          .classed('mark-undefined', true)
+                          .merge(undefinedLineSelection)
+                          .attr('d', d => linePath(d))
+                          .attr('stroke', 'red')
+                          .attr('fill', 'none')
+                          .attr('stroke-dasharray', '4 2')
+                          .attr('stroke-width', 4);
+
+    const lineSelection = container.selectAll('path.mark-defined').data([data]);
 
     lineSelection.enter()
                  .append('path')
-                 .classed('mark', true)
+                 .classed('mark-defined', true)
                  .merge(lineSelection)
-                 .attr('d', d => linePath(d))
+                 .attr('d', d => definedLinePath(d))
                  .attr('stroke', 'black')
                  .attr('fill', 'none')
                  .attr('stroke-width', 4);
