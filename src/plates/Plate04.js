@@ -131,10 +131,6 @@ const Visualization = ({
                                         }
                                      );
 
-    
-
-    
-
     // X Axis
     const xAxisSelection = container.selectAll('line.x-axis').data(xTicks);
 
