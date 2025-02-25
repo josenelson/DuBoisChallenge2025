@@ -98,17 +98,7 @@ const Visualization = ({
 
     
 
-    // Main line
-    const lineSelection = container.selectAll('path.mark').data([data]);
-
-    lineSelection.enter()
-                 .append('path')
-                 .classed('mark', true)
-                 .merge(lineSelection)
-                 .attr('d', d => linePath(d))
-                 .attr('stroke', 'black')
-                 .attr('fill', 'none')
-                 .attr('stroke-width', 4);
+    
 
     // X Axis
     const xAxisSelection = container.selectAll('line.x-axis').data(xTicks);
@@ -122,9 +112,9 @@ const Visualization = ({
                   .attr('y1', yScale(yTicks[0]))
                   .attr('y2', yScale(yTicks[yTicks.length - 1]))
                   .attr('stroke-width', 1)
-                  .attr('stroke', 'black');
+                  .attr('stroke', 'red');
 
-    // X Axis
+    // Y Axis
     const yAxisSelection = container.selectAll('line.y-axis').data(yTicks);
 
     yAxisSelection.enter()
@@ -136,9 +126,34 @@ const Visualization = ({
                   .attr('x1', xRange[0])
                   .attr('x2', xRange[1])
                   .attr('stroke-width', 1)
-                  .attr('stroke', 'black');
+                  .attr('stroke', 'red');
                 
+    // Bounding rectangle for axis
+    const boundAxisSelection = container.selectAll('rect.axis-boundry').data([xTicks, yTicks]);
 
+    boundAxisSelection.enter()
+                      .append('rect')
+                      .classed('axis-boundry', true)
+                      .merge(boundAxisSelection)
+                      .attr('x', xScale(xTicks[0]))
+                      .attr('y', yScale(yTicks[yTicks.length - 1]))
+                      .attr('width', xScale(xTicks[xTicks.length - 1]) - xScale(xTicks[0]))
+                      .attr('height', yScale(yTicks[0]) - yScale(yTicks[yTicks.length - 1]))
+                      .attr('fill', 'none')
+                      .attr('stroke-width', 2)
+                      .attr('stroke', 'black');
+
+    // Main line (this has the be the last thing on the view hirarchy so it stays above everything else)
+    const lineSelection = container.selectAll('path.mark').data([data]);
+
+    lineSelection.enter()
+                 .append('path')
+                 .classed('mark', true)
+                 .merge(lineSelection)
+                 .attr('d', d => linePath(d))
+                 .attr('stroke', 'black')
+                 .attr('fill', 'none')
+                 .attr('stroke-width', 4);
 };
 
 const Chart = ({
