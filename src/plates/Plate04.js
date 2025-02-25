@@ -26,6 +26,23 @@ const getYRange = (size) => {
     return [margins.top, size.height - (margins.bottom)];
 }
 
+const getYTicks = yScale => {
+    const [min, max] = yScale.domain();
+    if (!(min < max)) return [];
+
+    const increment = 100 * 1000;
+    
+    let start = 0;
+    const ticks = [];
+
+    while (start <= max) {
+        ticks.push(start);
+        start += increment;
+    }
+
+    return ticks;
+}
+
 const getXRange = (size) => {
     const titleTextElement = window.document.querySelector('#titleText');
     const titleTextElementBox = titleTextElement.getBBox();
@@ -55,7 +72,10 @@ const Visualization = ({
     
     // Scales
     const xScale = scaleLinear(yearRange, xRange);
-    const yScale = scaleLinear(valueRange, [yRange[1], yRange[0]]);
+    const yScale = scaleLinear([0, valueRange[1]], [yRange[1], yRange[0]]);
+
+    let xTicks = data.map(d => d.year);
+    let yTicks = getYTicks(yScale);
 
     // Line generator
     const linePath = line(d => xScale(year(d)), d => yScale(value(d)));
@@ -76,8 +96,9 @@ const Visualization = ({
                                         }
                                      );
 
-    //container.attr('transform', `translate(${xRange[0]}, ${yRange[0]})`);
+    
 
+    // Main line
     const lineSelection = container.selectAll('path.mark').data([data]);
 
     lineSelection.enter()
@@ -87,7 +108,36 @@ const Visualization = ({
                  .attr('d', d => linePath(d))
                  .attr('stroke', 'black')
                  .attr('fill', 'none')
-                 .attr('stroke-width', 2); // TODO: Need to flip the coordindates
+                 .attr('stroke-width', 4);
+
+    // X Axis
+    const xAxisSelection = container.selectAll('line.x-axis').data(xTicks);
+
+    xAxisSelection.enter()
+                  .append('line')
+                  .classed('x-axis', true)
+                  .merge(xAxisSelection)
+                  .attr('x1', xScale)
+                  .attr('x2', xScale)
+                  .attr('y1', yScale(yTicks[0]))
+                  .attr('y2', yScale(yTicks[yTicks.length - 1]))
+                  .attr('stroke-width', 1)
+                  .attr('stroke', 'black');
+
+    // X Axis
+    const yAxisSelection = container.selectAll('line.y-axis').data(yTicks);
+
+    yAxisSelection.enter()
+                  .append('line')
+                  .classed('y-axis', true)
+                  .merge(yAxisSelection)
+                  .attr('y1', yScale)
+                  .attr('y2', yScale)
+                  .attr('x1', xRange[0])
+                  .attr('x2', xRange[1])
+                  .attr('stroke-width', 1)
+                  .attr('stroke', 'black');
+                
 
 };
 
