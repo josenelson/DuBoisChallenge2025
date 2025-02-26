@@ -1,3 +1,7 @@
+import {
+    formatLocale
+} from 'd3';
+
 const ensureElement = ({
     parent,
     elementType,
@@ -9,4 +13,8 @@ const ensureElement = ({
     return element;
 }
 
-export { ensureElement };
+const dollarValueFormatter = formatLocale({
+    thousands: ","
+  });
+
+export { ensureElement, dollarValueFormatter };

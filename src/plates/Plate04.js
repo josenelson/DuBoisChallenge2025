@@ -4,11 +4,12 @@ import {
     line, 
     extent, 
     select,
-    curveNatural
+    curveNatural,
+    format
 } from 'd3';
 import { getSource04 } from '../util/data';
 import Background from '../components/Background';
-import { ensureElement } from '../util/d3util';
+import { ensureElement, dollarValueFormatter } from '../util/d3util';
 
 const margins = {
     top: 20,
@@ -80,6 +81,10 @@ const getYTicks = yScale => {
     return ticks;
 }
 
+const shouldShowXValue = value => value % 5 === 0;
+
+const shouldShowYValue = value => value % 1000000 === 0;
+
 const getXRange = (size) => {
     const titleTextElement = window.document.querySelector('#titleText');
     const titleTextElementBox = titleTextElement.getBBox();
@@ -115,7 +120,6 @@ const Visualization = ({
     let yTicks = getYTicks(yScale);
 
     // Line generator
-    const isDefined = d => d.year >= definedDataRange[0] && d.year <= definedDataRange[1];
     const path = line(d => xScale(year(d)), d => yScale(value(d))).curve(curveNatural);
 
     // Selections
@@ -177,7 +181,12 @@ const Visualization = ({
                   .merge(yAxisSelection)
                   .attr('y1', yScale)
                   .attr('y2', yScale)
-                  .attr('x1', xRange[0])
+                  .attr('x1', d => {
+                    if (shouldShowYValue(d)) {
+                        return margins.left;
+                    }
+                    return xRange[0];
+                  })
                   .attr('x2', xRange[1])
                   .attr('stroke-width', 1)
                   .attr('stroke', 'red');
@@ -198,7 +207,7 @@ const Visualization = ({
                       .attr('stroke', 'black');
 
     // Text for the xAxis
-    const xAxisTextSelection = container.selectAll('text.x-axis').data(xTicks);
+    const xAxisTextSelection = container.selectAll('text.x-axis').data(xTicks.filter(shouldShowXValue));
 
     xAxisTextSelection.enter()
                       .append('text')
@@ -215,21 +224,28 @@ const Visualization = ({
                       .text(d => d);
 
     // Text for the yAxis
-    const yAxisTextSelection = container.selectAll('text.y-axis').data(yTicks);
+    const visibileYTicks = yTicks.filter(shouldShowYValue);
+    const yAxisTextSelection = container.selectAll('text.y-axis').data(visibileYTicks);
 
     yAxisTextSelection.enter()
                       .append('text')
                       .classed('y-axis', true)
                       .merge(yAxisTextSelection)
-                      .attr('text-anchor', 'end')
-                      .attr('alignment-baseline', 'middle')
+                      .attr('text-anchor', 'start')
+                      .attr('alignment-baseline', 'top')
                       .attr('font-family', 'Charter')
                       .attr('font-weight', 'bold')
                       .attr('fill-opacity', 0.9)
-                      .attr('font-size', 11)
-                      .attr('x', xScale(xTicks[0]) - 3)
-                      .attr('y', d => yScale(d))
-                      .text(d => d);
+                      .attr('font-size', 14)
+                      .attr('x', margins.left)
+                      .attr('y', yScale)
+                      .attr('dy', '-0.3em')
+                      .text((d, i) => {
+                            if (i === visibileYTicks.length - 1) {
+                                return `${d} dollars`;
+                            }
+                            return d;
+                      });
 
     // Text for events
     const eventsSelection = container.selectAll('text.events').data(events);
