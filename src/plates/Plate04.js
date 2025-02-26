@@ -8,6 +8,7 @@ import {
 } from 'd3';
 import { getSource04 } from '../util/data';
 import Background from '../components/Background';
+import { ensureElement } from '../util/d3util';
 
 const margins = {
     top: 20,
@@ -115,8 +116,7 @@ const Visualization = ({
 
     // Line generator
     const isDefined = d => d.year >= definedDataRange[0] && d.year <= definedDataRange[1];
-    const linePath = line(d => xScale(year(d)), d => yScale(value(d))).curve(curveNatural);
-    const definedLinePath = line(d => xScale(year(d)), d => yScale(value(d))).curve(curveNatural).defined(isDefined);
+    const path = line(d => xScale(year(d)), d => yScale(value(d))).curve(curveNatural);
 
     // Selections
     const parentSelection = select(element);
@@ -130,6 +130,29 @@ const Visualization = ({
                                             return selection;
                                         }
                                      );
+
+    // Defs
+    const defsSelection = ensureElement({
+        parent: container,
+        elementType: 'defs',
+        className: 'defs'
+    });
+    
+    // Clip rectangle for defined area in chat
+    const clipPathContainer = ensureElement({
+        parent: defsSelection,
+        elementType: 'clipPath',
+        className: 'clip-path-container'
+    }).attr('id', 'defined-selection');
+
+    const clipPath = ensureElement({
+        parent: clipPathContainer,
+        elementType: 'rect',
+        className: 'clip-path'
+    }).attr('x', xScale(definedDataRange[0]))
+      .attr('y', 0)
+      .attr('width', xScale(definedDataRange[1]) - xScale(definedDataRange[0]))
+      .attr('height', yScale.range()[0]);
 
     // X Axis
     const xAxisSelection = container.selectAll('line.x-axis').data(xTicks);
@@ -209,7 +232,7 @@ const Visualization = ({
                       .text(d => d);
 
     // Text for events
-    const eventsSelection = container.selectAll('events').data(events);
+    const eventsSelection = container.selectAll('text.events').data(events);
 
     eventsSelection.enter()
                    .append('text')
@@ -257,7 +280,7 @@ const Visualization = ({
                           .append('path')
                           .classed('mark-undefined', true)
                           .merge(undefinedLineSelection)
-                          .attr('d', d => linePath(d))
+                          .attr('d', path)
                           .attr('stroke', 'red')
                           .attr('fill', 'none')
                           .attr('stroke-dasharray', '4 2')
@@ -269,10 +292,11 @@ const Visualization = ({
                  .append('path')
                  .classed('mark-defined', true)
                  .merge(lineSelection)
-                 .attr('d', d => definedLinePath(d))
+                 .attr('d', path)
                  .attr('stroke', 'black')
                  .attr('fill', 'none')
-                 .attr('stroke-width', 4);
+                 .attr('stroke-width', 4)
+                 .attr('clip-path', 'url(#defined-selection)');
 };
 
 const Chart = ({
