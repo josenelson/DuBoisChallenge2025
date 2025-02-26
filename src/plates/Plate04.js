@@ -248,46 +248,89 @@ const Visualization = ({
                       });
 
     // Text for events
-    const eventsSelection = container.selectAll('text.events').data(events);
+    const eventPlacement = d => {
+        const midX = Math.floor((d.year + (d.year + d.duration)) / 2);
+        let [yearData] = data.filter(d => d.year == midX);
 
-    eventsSelection.enter()
-                   .append('text')
-                   .classed('events', true)
-                   .merge(eventsSelection)
-                   .attr('text-anchor', d => {
-                        if (d.duration == 0) {
-                            return 'end';
-                        }
-                        return 'middle';
-                    })
-                   .attr('dx', d => {
-                        if (d.duration == 0) {
-                            return '-2em';
-                        }
+        if (!yearData) return 'bellow';
 
-                        return 0;
+        const midRangeValue = (valueRange[1] - valueRange[0]) / 2;
+
+        return yearData.value > midRangeValue ? 'bellow' : 'above';
+    };
+
+    let eventsSelection = container.selectAll('text.events').data(events);
+
+    eventsSelection = eventsSelection.enter()
+                                     .append('text')
+                                     .classed('events', true)
+                                     .merge(eventsSelection)
+                                     .attr('text-anchor', d => {
+                                            if (d.duration == 0) {
+                                                return 'end';
+                                            }
+                                            return 'middle';
+                                        })
+                                     .attr('dx', d => {
+                                        if (d.duration == 0) {
+                                            return '-2em';
+                                        }
+
+                                        return 0;
+                                     })
+                                    .attr('alignment-baseline', 'middle')
+                                    .attr('font-family', 'Charter')
+                                    .attr('font-weight', 'thin')
+                                    .attr('fill-opacity', 0.9)
+                                    .attr('font-size', 14)
+                                    .attr('transform', d => {
+                                            const midX = Math.floor((d.year + (d.year + d.duration)) / 2);
+                                            const x = xScale(midX);
+
+                                            let [yearData] = data.filter(d => d.year == midX);
+                                            if (!yearData) return;
+
+                                            const y = yScale(yearData.value);
+
+                                            if (d.duration == 0) {
+                                                return `translate(${x}, ${y}) rotate(-90)`;
+                                            }
+
+                                            return `translate(${x}, ${y})`;
+                                    })
+                                    .text(d => {
+                                        if (d.duration === 0) {
+                                            return d.title;
+                                        }
+
+                                        return '';
+                                    })
+                                    .call(arg1 => {
+                                        console.log(arg1); //Not sure if this will help 
+                                    });
+
+    // Need to add the tspan(s) for the individual words
+    /*
+    const cells = rows.selectAll("td")
+    .data(d => Object.values(d))
+    .enter()
+    .append("td")
+    .text(d => d);
+    */
+    eventsSelection.selectAll('span.line')
+                   .data(d => {
+                        if (d.duration > 0) {
+                            return d.title.split(' ');
+                        }
+                        return [];
                    })
-                   .attr('alignment-baseline', 'middle')
-                   .attr('font-family', 'Charter')
-                   .attr('font-weight', 'thin')
-                   .attr('fill-opacity', 0.9)
-                   .attr('font-size', 14)
-                   .attr('transform', d => {
-                        const midX = Math.floor((d.year + (d.year + d.duration)) / 2);
-                        const x = xScale(midX);
+                   .join(
+                        enter => enter.append('tspan').classed('line', true)
+                   )
+                   .attr('x', '0')
+                   .attr('dy', '1em')
+                   .text(d => d);
 
-                        let [yearData] = data.filter(d => d.year == midX);
-                        if (!yearData) return;
-
-                        const y = yScale(yearData.value);
-
-                        if (d.duration == 0) {
-                            return `translate(${x}, ${y}) rotate(-90)`;
-                        }
-
-                        return `translate(${x}, ${y})`;
-                   })
-                   .text(d => d.title.toLocaleUpperCase());
 
     // Main line (this has the be the last thing on the view hirarchy so it stays above everything else)
     const undefinedLineSelection = container.selectAll('path.mark-undefined').data([data]);
