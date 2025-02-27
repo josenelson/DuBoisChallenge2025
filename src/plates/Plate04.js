@@ -5,7 +5,8 @@ import {
     extent, 
     select,
     curveNatural,
-    format
+    min,
+    max
 } from 'd3';
 import { getSource04 } from '../util/data';
 import Background from '../components/Background';
@@ -247,18 +248,6 @@ const Visualization = ({
                             return d;
                       });
 
-    // Text for events
-    const eventPlacement = d => {
-        const midX = Math.floor((d.year + (d.year + d.duration)) / 2);
-        let [yearData] = data.filter(d => d.year == midX);
-
-        if (!yearData) return 'bellow';
-
-        const midRangeValue = (valueRange[1] - valueRange[0]) / 2;
-
-        return yearData.value > midRangeValue ? 'bellow' : 'above';
-    };
-
     let eventsSelection = container.selectAll('text.events').data(events);
 
     eventsSelection = eventsSelection.enter()
@@ -284,16 +273,27 @@ const Visualization = ({
                                     .attr('fill-opacity', 0.9)
                                     .attr('font-size', 14)
                                     .attr('transform', d => {
-                                            const midX = Math.floor((d.year + (d.year + d.duration)) / 2);
-                                            const x = xScale(midX);
+                                            const startYear = d.year;
+                                            const endYear = d.year + d.duration;
+                                            const midYear = Math.floor((startYear + endYear) / 2);
+                                            const x = xScale(midYear);
 
-                                            let [yearData] = data.filter(d => d.year == midX);
-                                            if (!yearData) return;
+                                            const [midYearData] = data.filter(d => d.year == midYear);
+                                            const [startYearData] = data.filter(d => d.year == startYear);
+                                            const [endYearData] = data.filter(d => d.year == endYear);
 
-                                            const y = yScale(yearData.value);
+                                            if (!midYearData || !startYearData || !endYearData) return;
+
+                                            let y = yScale(midYearData.value);
+                                            const startY = yScale(startYearData.value);
+                                            const endY = yScale(endYearData.value);
 
                                             if (d.duration == 0) {
                                                 return `translate(${x}, ${y}) rotate(-90)`;
+                                            } else { 
+                                                // Need to find the highest value of y and place the text bellow it
+                                                y = max([y, startY, endY]);
+                                                y += 10;
                                             }
 
                                             return `translate(${x}, ${y})`;
@@ -304,19 +304,9 @@ const Visualization = ({
                                         }
 
                                         return '';
-                                    })
-                                    .call(arg1 => {
-                                        console.log(arg1); //Not sure if this will help 
                                     });
 
     // Need to add the tspan(s) for the individual words
-    /*
-    const cells = rows.selectAll("td")
-    .data(d => Object.values(d))
-    .enter()
-    .append("td")
-    .text(d => d);
-    */
     eventsSelection.selectAll('span.line')
                    .data(d => {
                         if (d.duration > 0) {
