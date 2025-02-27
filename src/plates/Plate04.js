@@ -174,6 +174,7 @@ const Visualization = ({
                   .attr('y1', yScale(yTicks[0]))
                   .attr('y2', yScale(yTicks[yTicks.length - 1]))
                   .attr('stroke-width', 1)
+                  .attr('stroke-opacity', 0.2)
                   .attr('stroke', 'red');
 
     // Y Axis
@@ -193,6 +194,12 @@ const Visualization = ({
                   })
                   .attr('x2', xRange[1])
                   .attr('stroke-width', 1)
+                  .attr('stroke-opacity',d => {
+                        if (shouldShowYValue(d)) {
+                            return 0.6;
+                        }
+                        return 0.2;
+                  })
                   .attr('stroke', 'red');
                 
     // Bounding rectangle for axis
@@ -207,7 +214,7 @@ const Visualization = ({
                       .attr('width', xScale(xTicks[xTicks.length - 1]) - xScale(xTicks[0]))
                       .attr('height', yScale(yTicks[0]) - yScale(yTicks[yTicks.length - 1]))
                       .attr('fill', 'none')
-                      .attr('stroke-width', 2)
+                      .attr('stroke-width', 1)
                       .attr('stroke', 'black');
 
     // Text for the xAxis
@@ -272,8 +279,7 @@ const Visualization = ({
                                      })
                                     .attr('alignment-baseline', 'middle')
                                     .attr('font-family', 'Charter')
-                                    .attr('font-weight', 'thin')
-                                    .attr('fill-opacity', 0.9)
+                                    .attr('fill-opacity', 0.6)
                                     .attr('font-size', 14)
                                     .attr('transform', d => {
                                             const startYear = d.year;
@@ -333,9 +339,10 @@ const Visualization = ({
                           .classed('mark-undefined', true)
                           .merge(undefinedLineSelection)
                           .attr('d', path)
-                          .attr('stroke', 'red')
+                          .attr('stroke', 'black')
                           .attr('fill', 'none')
-                          .attr('stroke-dasharray', '4 2')
+                          .attr('stroke-dasharray', '4 4')
+                          .attr('stroke-opacity', '0.6')
                           .attr('stroke-width', 4);
 
     const lineSelection = container.selectAll('path.mark-defined').data([data]);
@@ -346,6 +353,7 @@ const Visualization = ({
                  .merge(lineSelection)
                  .attr('d', path)
                  .attr('stroke', 'black')
+                 .attr('stroke-opacity', '0.6')
                  .attr('fill', 'none')
                  .attr('stroke-width', 4)
                  .attr('clip-path', 'url(#defined-selection)');
@@ -381,15 +389,6 @@ const Chart = ({
 
     return (
         <svg className='plate'>
-            <defs>
-                <filter x="-4.0%" y="-13.9%" width="108.0%" height="127.9%" filterUnits="objectBoundingBox" id="filter-g9odhc_gqf-2">
-                    <feMorphology radius="5" operator="erode" in="SourceAlpha" result="shadowSpreadInner1"></feMorphology>
-                    <feGaussianBlur stdDeviation="5" in="shadowSpreadInner1" result="shadowBlurInner1"></feGaussianBlur>
-                    <feOffset dx="1" dy="0" in="shadowBlurInner1" result="shadowOffsetInner1"></feOffset>
-                    <feComposite in="shadowOffsetInner1" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="shadowInnerInner1"></feComposite>
-                    <feColorMatrix values="0 0 0 0 0.396078431   0 0 0 0 0.262745098   0 0 0 0 0.129411765  0 0 0 0.703261582 0" type="matrix" in="shadowInnerInner1"></feColorMatrix>
-                </filter>
-            </defs>
             <g>
                 <Background />
                 <text 
