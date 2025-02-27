@@ -13,8 +13,4 @@ const ensureElement = ({
     return element;
 }
 
-const dollarValueFormatter = formatLocale({
-    thousands: ","
-  });
-
-export { ensureElement, dollarValueFormatter };
+export { ensureElement };

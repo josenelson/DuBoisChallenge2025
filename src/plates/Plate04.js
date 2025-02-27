@@ -10,7 +10,7 @@ import {
 } from 'd3';
 import { getSource04 } from '../util/data';
 import Background from '../components/Background';
-import { ensureElement, dollarValueFormatter } from '../util/d3util';
+import { ensureElement } from '../util/d3util';
 
 const margins = {
     top: 20,
@@ -19,7 +19,7 @@ const margins = {
     right: 20
 }
 
-const titleText = "WIP \nVisualization"; //"Acres of \nland \nowned by \nBlack \nGeorgians \n1970-1900";
+const titleText = "Acres of land owned by Black Georgians 1970-1900";
 
 const events = [
     {
@@ -58,11 +58,6 @@ const definedDataRange = [1875, 1899];
 
 const TitleTextStyle = {
     font: "2em 'B52-ULC W00 ULC'"
-};
-
-
-const getYRange = (size) => {
-    return [margins.top, size.height - (margins.bottom)];
 }
 
 const getYTicks = yScale => {
@@ -87,13 +82,21 @@ const shouldShowXValue = value => value % 5 === 0;
 const shouldShowYValue = value => value % 1000000 === 0;
 
 const getXRange = (size) => {
-    const titleTextElement = window.document.querySelector('#titleText');
-    const titleTextElementBox = titleTextElement.getBBox();
-    const leftMargin = titleTextElementBox.x + titleTextElementBox.width;
-
-    const xRange = [leftMargin + margins.left, size.width - margins.right];
+    const yLabelsMargin = 150;
+    const leftMargin = margins.left + yLabelsMargin;
+    
+    const xRange = [leftMargin, size.width - margins.right];
 
     return xRange;
+}
+
+const getYRange = (size) => {
+    const titleTextElement = window.document.querySelector('#titleText');
+    const titleTextElementBox = titleTextElement.getBBox();
+
+    const topMargin = titleTextElementBox.y + titleTextElementBox.height + margins.top  ;
+
+    return [topMargin, size.height - (margins.bottom)];
 }
 
 const Visualization = ({
