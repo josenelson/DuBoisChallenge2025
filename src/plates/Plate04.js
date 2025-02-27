@@ -153,7 +153,7 @@ const Visualization = ({
         className: 'clip-path-container'
     }).attr('id', 'defined-selection');
 
-    const clipPath = ensureElement({
+    ensureElement({
         parent: clipPathContainer,
         elementType: 'rect',
         className: 'clip-path'
@@ -246,7 +246,7 @@ const Visualization = ({
                       .attr('alignment-baseline', 'top')
                       .attr('font-family', 'Charter')
                       .attr('font-weight', 'bold')
-                      .attr('fill-opacity', 0.9)
+                      .attr('fill-opacity', 0.7)
                       .attr('font-size', 14)
                       .attr('x', margins.left)
                       .attr('y', yScale)
@@ -279,7 +279,7 @@ const Visualization = ({
                                      })
                                     .attr('alignment-baseline', 'middle')
                                     .attr('font-family', 'Charter')
-                                    .attr('fill-opacity', 0.6)
+                                    .attr('fill-opacity', 0.7)
                                     .attr('font-size', 14)
                                     .attr('transform', d => {
                                             const startYear = d.year;
@@ -309,7 +309,7 @@ const Visualization = ({
                                     })
                                     .text(d => {
                                         if (d.duration === 0) {
-                                            return d.title;
+                                            return d.title.toLocaleUpperCase();
                                         }
 
                                         return '';
@@ -328,7 +328,7 @@ const Visualization = ({
                    )
                    .attr('x', '0')
                    .attr('dy', '1em')
-                   .text(d => d);
+                   .text(d => d.toLocaleUpperCase());
 
 
     // Main line (this has the be the last thing on the view hirarchy so it stays above everything else)
@@ -339,7 +339,7 @@ const Visualization = ({
                           .classed('mark-undefined', true)
                           .merge(undefinedLineSelection)
                           .attr('d', path)
-                          .attr('stroke', 'black')
+                          .attr('stroke', '#5F584E')
                           .attr('fill', 'none')
                           .attr('stroke-dasharray', '4 4')
                           .attr('stroke-opacity', '0.6')
@@ -352,8 +352,7 @@ const Visualization = ({
                  .classed('mark-defined', true)
                  .merge(lineSelection)
                  .attr('d', path)
-                 .attr('stroke', 'black')
-                 .attr('stroke-opacity', '0.6')
+                 .attr('stroke', '#5F584E')
                  .attr('fill', 'none')
                  .attr('stroke-width', 4)
                  .attr('clip-path', 'url(#defined-selection)');
