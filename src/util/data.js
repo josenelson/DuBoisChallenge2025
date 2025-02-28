@@ -58,4 +58,24 @@ const getCountyData03 = async function() {
     return countyData;
 }
 
-export { getSource01, getSource02, getSource03, getShape03, getCountyData03 };
+const getSource04 = async function() {
+    const data = await csv("/data04.csv");
+
+    const transformedData = data.map(d => {
+        return {
+            year: d['Year'] * 1,
+            value: d['Property Valuation'] * 1
+        }
+    });
+
+    return transformedData;
+}
+
+export { 
+    getSource01, 
+    getSource02, 
+    getSource03, 
+    getShape03, 
+    getCountyData03, 
+    getSource04 
+};
