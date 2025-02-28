@@ -19,7 +19,7 @@ const margins = {
     right: 20
 }
 
-const titleText = "Acres of land owned by Black Georgians 1970-1900";
+const titleText = "Valuation of Town and City Property owned by Black Georgians";
 
 const events = [
     {

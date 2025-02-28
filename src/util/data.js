@@ -71,11 +71,27 @@ const getSource04 = async function() {
     return transformedData;
 }
 
+const getSource05 = async function() {
+    const data = await csv("/data05.csv");
+
+    const transformedData = data.map(d => {
+        return {
+            year: d['Year'] * 1,
+            value: d['Valuation (Dollars)'] * 1
+        }
+    }).sort((element1, element2) => {
+        return element1.year - element2.year;
+    });
+
+    return transformedData;
+}
+
 export { 
     getSource01, 
     getSource02, 
     getSource03, 
     getShape03, 
     getCountyData03, 
-    getSource04 
+    getSource04,
+    getSource05,
 };
