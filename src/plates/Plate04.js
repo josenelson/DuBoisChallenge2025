@@ -19,7 +19,7 @@ const margins = {
     right: 20
 }
 
-const titleText = "Valuation of Town and City Property owned by Black Georgians";
+const titleText = "Valuation of Town and City Property owned by Black Georgians`";
 
 const events = [
     {
