@@ -92,22 +92,13 @@ const Visualization = ({
     };
 
     parentSelection.selectAll('path.mark')
-                   .data(data)
+                   .data(data.reverse())
                    .join(
                         enter => enter.append('path').classed('mark', true)
                    )
                    .attr('d', (d, i) => {
-                        let startRadius = 0;
-                        let endRadius = 0;
-
-                        if (i === 0) {
-                            endRadius = radiusScale(d.value);
-                        } else {
-                            const previousValue = data[i - 1];
-
-                            startRadius = radiusScale(previousValue.value);
-                            endRadius = radiusScale(d.value);
-                        }
+                        const startRadius = 0;
+                        const endRadius = radiusScale(d.value);
 
                         return pathGenerator(startRadius, endRadius);
                    })
