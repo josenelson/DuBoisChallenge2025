@@ -40,6 +40,8 @@ const getXRange = (size) => {
     return xRange;
 }
 
+const colorRange = ['#7e6583', '#4682b4', '#00aa00', '#dc143c', '#ffc0cb', '#ffd700', '#d2b48c', '#654321', '#000000'];
+
 const Visualization = ({
     element, 
     size,
@@ -47,18 +49,7 @@ const Visualization = ({
 }) => {
     if (data.length == 0) return;
 
-    // We represent the delta from the 1st year to the last so calculate the delta from year to year
-    data.map((d, i, arr) => {
-        if (i == 0) {
-            d.delta = d.value;
-        } else {
-            d.delta = d.value - arr[i - 1].value;
-        }
-    });
-
     // Data ranges
-    const value = d => d.delta;
-    const valueRange = extent(data, value);
     const yRange = getYRange(size);
     const xRange = getXRange(size);
     
@@ -66,12 +57,10 @@ const Visualization = ({
     const circleCenter = [xRange[0] + ((xRange[1] - xRange[0]) / 2), yRange[0] + ((yRange[1] - yRange[0]) / 2)];
 
     // Scales
-    const radiusScale = scaleLinear([0, valueRange[1]], [0, circleTotalSize / 2]);
+    const radiusScale = scaleLinear([0, data[data.length - 1].value], [0, circleTotalSize / 2]);
 
     // State
     let selectedIndex = -1;
-
-    // Geometries
     
     // Selections
     const parentSelection = select(element);
@@ -107,8 +96,41 @@ const Visualization = ({
                    .join(
                         enter => enter.append('path').classed('mark', true)
                    )
-                   .attr('d', pathGenerator(10, 100))
-                   .attr('fill', 'red');
+                   .attr('d', (d, i) => {
+                        let startRadius = 0;
+                        let endRadius = 0;
+
+                        if (i === 0) {
+                            endRadius = radiusScale(d.value);
+                        } else {
+                            const previousValue = data[i - 1];
+
+                            startRadius = radiusScale(previousValue.value);
+                            endRadius = radiusScale(d.value);
+                        }
+
+                        return pathGenerator(startRadius, endRadius);
+                   })
+                   .attr('shape-rendering', 'crispEdges')
+                   .attr('fill', (_, i) => colorRange[i]);
+
+    parentSelection.selectAll('text.label-year')
+                   .data(data)
+                   .join(
+                        enter => enter.append('text').classed('label-year', true)
+                   )
+                   .attr('text-anchor', 'middle')
+                   .attr('alignment-baseline', 'top')
+                   .attr('font-family', 'Charter')
+                   .attr('font-weight', 'bold')
+                   .attr('fill-opacity', 0.7)
+                   .attr('font-size', 14)
+                   .attr('x', circleCenter[0])
+                   .attr('y', d => {
+                        const endRadius = radiusScale(d.value);
+                        return circleCenter[1] + endRadius;
+                   })
+                   .text(d => d.year);
 };
 
 const Chart = ({
