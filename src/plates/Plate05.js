@@ -11,6 +11,7 @@ import {
 } from 'd3';
 import { getSource05 } from '../util/data';
 import Background from '../components/Background';
+import { describeArc } from '../util/geometry';
 
 const margins = {
     top: 20,
@@ -75,37 +76,35 @@ const Visualization = ({
                                         }
                                      );
 
-    container.attr('transform', `translate(${xRange[0]}, ${yRange[0]})`);
+    //container.attr('transform', `translate(${xRange[0]}, ${yRange[0]})`);
 
-    const pathGenerator = (startRadius, endRadius) => {
-        const commands = [
-            `M ${circleCenter[0]}, ${circleCenter[1]}`, // Move to center of ring
-            `m 0, -${endRadius}`, // Move to top of ring
-            `a ${endRadius}, ${endRadius}, 0, 1, 0, 1, 0`, // Draw outer arc, but don't close it
-            `Z`, // default fill-rule:even-odd will help create the empty innards
-            `m 1 ${endRadius - startRadius}`, // Move to top point of inner radius
-            `a ${startRadius}, ${startRadius}, 0, 1, 1, -1, 0`, // Close the inner ring. Actually will still work without, but inner ring will have one unit missing in strok
-            `Z`
-        ];
-
-        return commands.join(' ');
+    const pathGenerator = (radius) => {
+        return describeArc({
+            x: circleCenter[0], 
+            y: circleCenter[1], 
+            radius: radius, 
+            angles:[
+                {start: 45, end: 90},
+                {start: 120, end: 280},
+                {start: 280, end: 360}
+            ]
+        });
     };
 
-    parentSelection.selectAll('path.mark')
+    container.selectAll('path.mark')
                    .data(data.reverse())
                    .join(
                         enter => enter.append('path').classed('mark', true)
                    )
                    .attr('d', (d, i) => {
-                        const startRadius = 0;
-                        const endRadius = radiusScale(d.value);
+                        const radius = radiusScale(d.value);
 
-                        return pathGenerator(startRadius, endRadius);
+                        return pathGenerator(radius);
                    })
-                   .attr('shape-rendering', 'crispEdges')
+                   .attr('stroke', 'none')
                    .attr('fill', (_, i) => colorRange[i]);
 
-    parentSelection.selectAll('text.label-year')
+    container.selectAll('text.label-year')
                    .data(data)
                    .join(
                         enter => enter.append('text').classed('label-year', true)
