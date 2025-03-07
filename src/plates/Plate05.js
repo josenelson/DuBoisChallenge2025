@@ -59,10 +59,23 @@ const Visualization = ({
 
     // Scales
     const radiusScale = scaleLinear([0, data[data.length - 1].value], [0, circleTotalSize / 2]);
-
-    // State
-    let selectedIndex = -1;
     
+    const totalSlots = data.length;
+
+    const slotPosition = index => {
+        const delta = 360 / totalSlots;
+        return index * delta;
+    }
+
+    const slotCount = index => {
+        let count = totalSlots - index;
+        if (count == 0) { 
+            count = 1;
+        }
+
+        return count;
+    }
+
     // Selections
     const parentSelection = select(element);
 
@@ -76,31 +89,58 @@ const Visualization = ({
                                         }
                                      );
 
-    const pathGenerator = (radius, angles = []) => {
+    const pathGenerator = (startRadius, endRadius, angles = []) => {
         return describeArc({
             x: circleCenter[0], 
             y: circleCenter[1], 
-            radius: radius, 
+            startRadius: startRadius, 
+            endRadius: endRadius,
             angles: angles
         });
     };
 
     container.selectAll('path.mark')
-                   .data(data.reverse())
+                   .data(data)
                    .join(
                         enter => enter.append('path').classed('mark', true)
                    )
                    .attr('d', (d, i) => {
-                        const actualIndex = data.length - i;
-                        const radius = radiusScale(d.value);
+                        // Need to caculate how many slots each one has
+                        //  there's always data.length slots but not all of them might be visible
+                        const count = slotCount(i);
+                        const slots = [];
+                        for (let index = 0; index < count; index++) {
+                            const slotAnglePosition = slotPosition(index);
+                            slots.push({
+                                index: index,
+                                startAnglePosition: slotAnglePosition,
+                                endAnglePosition: slotAnglePosition + 10
+                            });
+                        }
+
+                        console.log(`actualIndex=${i}`, slots);
+
+                        const startRadius = radiusScale(d.value);
+                        let endRadius = 0;
+
+                        if (i > 0) {
+                            endRadius = radiusScale(data[i - 1].value);
+                        }
+
                         const angles = [
-                            {start: 45 - (actualIndex * 2), end: 300 + (actualIndex * 2)}
+                            {start: 45 - (i * 2), end: 300 + (i * 2)}
                         ];
 
-                        return pathGenerator(radius, angles);
+                        return pathGenerator(
+                            startRadius,
+                            endRadius,
+                            angles
+                        );
                    })
-                   .attr('stroke', 'none')
-                   .attr('fill', (_, i) => colorRange[i]);
+                   .attr('stroke', 'black')
+                   .attr('stroke-width', '2')
+                   .attr('fill', (_, i) => colorRange[i])
+                   .attr('opacity', (_, i) => i === 3 ? 1 : 0);
 
     container.selectAll('text.label-year')
                    .data(data)
