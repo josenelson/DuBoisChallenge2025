@@ -76,18 +76,12 @@ const Visualization = ({
                                         }
                                      );
 
-    //container.attr('transform', `translate(${xRange[0]}, ${yRange[0]})`);
-
-    const pathGenerator = (radius) => {
+    const pathGenerator = (radius, angles = []) => {
         return describeArc({
             x: circleCenter[0], 
             y: circleCenter[1], 
             radius: radius, 
-            angles:[
-                {start: 45, end: 90},
-                {start: 120, end: 280},
-                {start: 280, end: 360}
-            ]
+            angles: angles
         });
     };
 
@@ -97,9 +91,13 @@ const Visualization = ({
                         enter => enter.append('path').classed('mark', true)
                    )
                    .attr('d', (d, i) => {
+                        const actualIndex = data.length - i;
                         const radius = radiusScale(d.value);
+                        const angles = [
+                            {start: 45 - (actualIndex * 2), end: 300 + (actualIndex * 2)}
+                        ];
 
-                        return pathGenerator(radius);
+                        return pathGenerator(radius, angles);
                    })
                    .attr('stroke', 'none')
                    .attr('fill', (_, i) => colorRange[i]);
