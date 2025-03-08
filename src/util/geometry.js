@@ -10,7 +10,6 @@ const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
 const describeArc = ({
     x, 
     y, 
-    radius,
     startRadius,
     endRadius,
     angles = []
@@ -24,17 +23,35 @@ const describeArc = ({
         //`a ${startRadius}, ${startRadius}, 0, 1, 1, -1, 0`, // Close the inner ring. Actually will still work without, but inner ring will have one unit missing in strok
     ];
 
-    let spacing = [0, 120];
-
-    let nextPosition = polarToCartesian(x, y, endRadius, spacing[0]);
-    d.push('M', nextPosition.x, nextPosition.y);
-    d.push('L', x, y);
+    let pos = [
+               {start: 0, end: 12}, 
+               {start: 24, end: 50},
+               {start: 200, end: 300}
+              ];
     
-    nextPosition = polarToCartesian(x, y, endRadius, spacing[1]);
-    d.push('L', nextPosition.x, nextPosition.y);
+    let nextPosition;
 
-    nextPosition = polarToCartesian(x, y, endRadius, spacing[0]);
-    d.push("A", endRadius, endRadius, 0, 1, 1, nextPosition.x, nextPosition.y);
+    pos.forEach(({start, end}) => {
+      let shouldArc = nextPosition != null;
+      
+      nextPosition = polarToCartesian(x, y, endRadius, start);
+
+      if (shouldArc) {
+        d.push("A", endRadius, endRadius, 0, 0, 1, nextPosition.x, nextPosition.y);
+      }
+
+      d.push('M', nextPosition.x, nextPosition.y);
+      d.push('L', x, y);
+    
+      nextPosition = polarToCartesian(x, y, endRadius, end);
+      d.push('L', nextPosition.x, nextPosition.y);
+    });
+
+    // Always need to close the loop with the last position
+    nextPosition = polarToCartesian(x, y, endRadius, pos[0].start);
+    d.push("A", endRadius, endRadius, 0, 0, 1, nextPosition.x, nextPosition.y);
+    //d.push('L', nextPosition.x, nextPosition.y);
+    
 
     /*
     angles.forEach(({start, end}) => {
@@ -51,7 +68,7 @@ const describeArc = ({
     });
     */
 
-    d.push('Z');
+   // d.push('Z');
 
     return d.join(' ');       
 }
