@@ -56,6 +56,8 @@ const Visualization = ({
     
     const valueRange = extent(data, value);
     const yearRange = extent(data, year);
+    const radius = 28;
+    const maxAngle = 270;
 
     const yRange = getYRange(size);
     const xRange = getXRange(size);
@@ -65,6 +67,7 @@ const Visualization = ({
     const circleCenter = [xRange[0] + ((xRange[1] - xRange[0]) / 2), yRange[0] + ((yRange[1] - yRange[0]) / 2)];
     
     // Scales
+    const angleScale = scaleLinear([0, valueRange[1]], [0, maxAngle]);
 
     // Selections
     const parentSelection = select(element);
@@ -80,17 +83,21 @@ const Visualization = ({
                                      );
 
     const lineSelection = container.selectAll('path.mark')
-                                   .data([data])
+                                   .data(data)
                                    .join(
                                         enter => enter.append('path').classed('mark', true)
                                    );
 
     lineSelection.attr('d', (d, i) => {
+                        const outerRadius = circleRadius - (i * radius);
+                        const angle = angleScale(value(d));
+
                         const path = describeArc({
                             x: circleCenter[0],
                             y: circleCenter[1],
-                            outerRadius: circleRadius,
-                            innerRadius: 100
+                            outerRadius: outerRadius,
+                            innerRadius: outerRadius - radius,
+                            angle: angle
                         });
 
                         return path;

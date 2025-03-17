@@ -12,7 +12,7 @@ const describeArc = ({
 	y,
 	outerRadius,
 	innerRadius,
-	angle = 220
+	angle
 }) => {
 	/*
 	Arc command for reference:
@@ -44,8 +44,6 @@ const describeArc = ({
 		`L ${innerEndPoint.x} ${innerEndPoint.y}`,
 		// Draw the inner arc
 		`A ${innerRadius}, ${innerRadius}, 0, ${largeArcFlag}, 0, ${innerStartPoint.x}, ${innerStartPoint.y}`,
-		//`m 1 ${innerRadius - outerRadius}`, // Move to top point of inner radius
-		//`a ${outerRadius}, ${outerRadius}, 0, 1, 1, -1, 0`, // Close the inner ring. Actually will still work without, but inner ring will have one unit missing in strok
 		`Z`
 	];
 
