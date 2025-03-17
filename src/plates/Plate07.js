@@ -11,7 +11,7 @@ import {
 import { getSource07 } from '../util/data';
 import Background from '../components/Background';
 import { ensureElement } from '../util/d3util';
-import { describeArc } from '../util/geometry';
+import { describeArc, polarToCartesian } from '../util/geometry';
 
 const margins = {
     top: 20,
@@ -55,7 +55,6 @@ const Visualization = ({
     const year = d => d.year;
     
     const valueRange = extent(data, value);
-    const yearRange = extent(data, year);
     const radius = 28;
     const maxAngle = 270;
 
@@ -68,6 +67,7 @@ const Visualization = ({
     
     // Scales
     const angleScale = scaleLinear([0, valueRange[1]], [0, maxAngle]);
+    const outerRadiusScale = index => circleRadius - (index * radius);
 
     // Selections
     const parentSelection = select(element);
@@ -89,7 +89,7 @@ const Visualization = ({
                                    );
 
     lineSelection.attr('d', (d, i) => {
-                        const outerRadius = circleRadius - (i * radius);
+                        const outerRadius = outerRadiusScale(i);
                         const angle = angleScale(value(d));
 
                         const path = describeArc({
@@ -105,6 +105,83 @@ const Visualization = ({
                  .attr('stroke', 'black')
                  .attr('fill', 'red')
                  .attr('stroke-width', 2);
+
+    const valueLabelLocation = (data, index) => {
+        const location = polarToCartesian({
+            centerX: circleCenter[0],
+            centerY: circleCenter[1],
+            radius: outerRadiusScale(index),
+            angleInDegrees: 0
+        });
+
+        location.y += radius / 2;
+
+        return location;
+    };
+
+    const valueLocation = (data, index) => {
+        const location = polarToCartesian({
+            centerX: circleCenter[0],
+            centerY: circleCenter[1],
+            radius: outerRadiusScale(index),
+            angleInDegrees: angleScale(value(data))
+        });
+
+        location.y += radius / 2;
+
+        return location;
+    };
+
+    container.selectAll('text.value-label')
+             .data(data)
+             .join(
+                enter => enter.append('text').classed('value-label', true)
+             )
+             .attr('x', (d, i) => {
+                const location = valueLabelLocation(d, i);
+                return location.x;
+             })
+             .attr('y', (d, i) => {
+                const location = valueLabelLocation(d, i);
+                return location.y;
+             })
+             .text(d => {
+                return year(d);
+             })
+             .attr('text-anchor', 'end')
+             .attr('alignment-baseline', 'middle')
+             .attr('font-family', 'Charter')
+             .attr('font-weight', 'bold')
+             .attr('fill-opacity', 0.9)
+             .attr('font-size', 14)
+             .attr('dx', -3)
+             ;
+
+
+    container.selectAll('text.value')
+             .data(data)
+             .join(
+                enter => enter.append('text').classed('value', true)
+             )
+             .attr('x', (d, i) => {
+                const location = valueLocation(d, i);
+                return location.x;
+             })
+             .attr('y', (d, i) => {
+                const location = valueLocation(d, i);
+                return location.y;
+             })
+             .text(d => {
+                return value(d);
+             })
+             .attr('text-anchor', 'end')
+             .attr('alignment-baseline', 'middle')
+             .attr('font-family', 'Charter')
+             .attr('font-weight', 'bold')
+             .attr('fill-opacity', 0.9)
+             .attr('font-size', 14)
+             .attr('dx', -3)
+             ;
 };
 
 const Chart = ({

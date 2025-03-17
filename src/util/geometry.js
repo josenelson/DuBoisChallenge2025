@@ -1,4 +1,9 @@
-const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
+const polarToCartesian = ({
+	centerX, 
+	centerY, 
+	radius, 
+	angleInDegrees
+}) => {
 	const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
 
 	return {
@@ -27,11 +32,11 @@ const describeArc = ({
 		x, y: the end point of the arc
 	*/
 
-	const outerStartPoint = polarToCartesian(x, y, outerRadius, 0);
-	const outerEndPoint = polarToCartesian(x, y, outerRadius, angle);
+	const outerStartPoint = polarToCartesian({centerX: x, centerY: y, radius: outerRadius, angleInDegrees: 0});
+	const outerEndPoint = polarToCartesian({centerX: x, centerY: y, radius: outerRadius, angleInDegrees: angle});
 
-	const innerStartPoint = polarToCartesian(x, y, innerRadius, 0);
-	const innerEndPoint = polarToCartesian(x, y, innerRadius, angle);
+	const innerStartPoint = polarToCartesian({centerX: x, centerY: y, radius: innerRadius, angleInDegrees: 0});
+	const innerEndPoint = polarToCartesian({centerX: x, centerY: y, radius: innerRadius, angleInDegrees: angle});
 
 	const largeArcFlag = angle > 180 ? 1 : 0;
 
@@ -50,4 +55,4 @@ const describeArc = ({
 	return d.join(' ');
 }
 
-export { describeArc };
+export { describeArc, polarToCartesian };
