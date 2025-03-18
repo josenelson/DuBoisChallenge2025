@@ -71,11 +71,25 @@ const getSource04 = async function() {
     return transformedData;
 }
 
+const getSource07 = async function() {
+    const data = await csv("/data07.csv");
+
+    const transformedData = data.map(d => {
+        return {
+            year: d['Year'] * 1,
+            value: d['Houshold Value (Dollars)'] * 1
+        }
+    });
+
+    return transformedData;
+}
+
 export { 
     getSource01, 
     getSource02, 
     getSource03, 
     getShape03, 
     getCountyData03, 
-    getSource04 
+    getSource04,
+    getSource07
 };
