@@ -4,7 +4,7 @@ import {
     line, 
     extent, 
     select,
-    curveNatural,
+    scaleQuantile,
     min,
     max
 } from 'd3';
@@ -20,10 +20,10 @@ const margins = {
     right: 20
 }
 
-const titleText = "WIP Visualization";
+const titleText = "ASSESSED VALUE OF HOUSEHOLD AND KITCHEN FURNITURE OWNED BY GEORGIA BLACKS";
 
 const TitleTextStyle = {
-    font: "2em 'B52-ULC W00 ULC'"
+    font: "1.2em 'B52-ULC W00 ULC'"
 }
 
 const getXRange = (size) => {
@@ -43,6 +43,13 @@ const getYRange = (size) => {
     return [topMargin, size.height - (margins.bottom)];
 }
 
+const getQuadrant = angle => {
+    if (angle <= 90) return 0;
+    if (angle > 90 && angle <= 180) return 1;
+    if (angle > 180 && angle <= 270) return 2;
+    return 3;
+}
+
 const Visualization = ({
     element, 
     size,
@@ -55,7 +62,8 @@ const Visualization = ({
     const year = d => d.year;
     
     const valueRange = extent(data, value);
-    const radius = 28;
+    const yearRange = extent(data, year);
+    const radius = 32;
     const maxAngle = 270;
 
     const yRange = getYRange(size);
@@ -68,6 +76,7 @@ const Visualization = ({
     // Scales
     const angleScale = scaleLinear([0, valueRange[1]], [0, maxAngle]);
     const outerRadiusScale = index => circleRadius - (index * radius);
+    const colorScale = scaleQuantile(yearRange, ['#7e6583', '#4682b4', '#00aa00', '#dc143c', '#ffc0cb', '#ffd700', '#d2b48c', '#654321', '#000000']);
 
     // Selections
     const parentSelection = select(element);
@@ -82,29 +91,49 @@ const Visualization = ({
                                         }
                                      );
 
-    const lineSelection = container.selectAll('path.mark')
-                                   .data(data)
-                                   .join(
-                                        enter => enter.append('path').classed('mark', true)
-                                   );
+    container.selectAll('path.mark-background')
+             .data(data)
+             .join(enter => enter.append('path').classed('mark-background', true))
+             .attr('d', (d, i) => {
+                const outerRadius = outerRadiusScale(i);
+                const angle = angleScale(value(d));
 
-    lineSelection.attr('d', (d, i) => {
-                        const outerRadius = outerRadiusScale(i);
-                        const angle = angleScale(value(d));
+                const path = describeArc({
+                    x: circleCenter[0],
+                    y: circleCenter[1],
+                    outerRadius: outerRadius,
+                    innerRadius: outerRadius - radius,
+                    angle: angle
+                });
 
-                        const path = describeArc({
-                            x: circleCenter[0],
-                            y: circleCenter[1],
-                            outerRadius: outerRadius,
-                            innerRadius: outerRadius - radius,
-                            angle: angle
-                        });
+                return path;
+             })
+             .attr('filter', 'url(#filter-g9odhc_gqf-2)');;
 
-                        return path;
-                  })
-                 .attr('stroke', 'black')
-                 .attr('fill', 'red')
-                 .attr('stroke-width', 2);
+    container.selectAll('path.mark')
+             .data(data)
+             .join(enter => enter.append('path').classed('mark', true))
+             .attr('d', (d, i) => {
+                const outerRadius = outerRadiusScale(i);
+                const angle = angleScale(value(d));
+
+                const path = describeArc({
+                    x: circleCenter[0],
+                    y: circleCenter[1],
+                    outerRadius: outerRadius,
+                    innerRadius: outerRadius - radius,
+                    angle: angle
+                });
+
+                return path;
+            })
+            .attr('stroke', 'black')
+            .attr('fill', (d) => {
+                return colorScale(year(d));
+            })
+            .attr('stroke-width', 1)
+            .attr('stroke-opacity', 0.9)
+            .attr('fill-opacity', 0.65);
 
     const valueLabelLocation = (data, index) => {
         const location = polarToCartesian({
@@ -154,33 +183,68 @@ const Visualization = ({
              .attr('font-weight', 'bold')
              .attr('fill-opacity', 0.9)
              .attr('font-size', 14)
-             .attr('dx', -3)
+             .attr('dx', -5)
              ;
 
+
+    const quadrantForData = data => getQuadrant(angleScale(value(data)));
 
     container.selectAll('text.value')
              .data(data)
              .join(
                 enter => enter.append('text').classed('value', true)
              )
-             .attr('x', (d, i) => {
-                const location = valueLocation(d, i);
-                return location.x;
-             })
-             .attr('y', (d, i) => {
-                const location = valueLocation(d, i);
-                return location.y;
-             })
              .text(d => {
-                return value(d);
+                return `$${value(d)}`;
              })
-             .attr('text-anchor', 'end')
-             .attr('alignment-baseline', 'middle')
+             .attr('text-anchor', d => {
+                const quadrant = quadrantForData(d);
+
+                if (quadrant == 0) return 'start';
+                else if (quadrant == 1) return 'start';
+                else if (quadrant == 2) return 'end';
+                else if (quadrant == 3) return 'end';
+             })
+             .attr('alignment-baseline', d => {
+                const quadrant = quadrantForData(d);
+
+                if (quadrant == 0) return 'middle';
+                if (quadrant == 1) return 'middle';
+                if (quadrant == 2) return 'top';
+                if (quadrant == 3) return 'top';
+             })
              .attr('font-family', 'Charter')
              .attr('font-weight', 'bold')
              .attr('fill-opacity', 0.9)
              .attr('font-size', 14)
-             .attr('dx', -3)
+             .attr('dx', d => {
+                const quadrant = quadrantForData(d);
+
+                if (quadrant == 0) return 3;
+                if (quadrant == 1) return 0;
+             })
+             .attr('dy', d => {
+                const quadrant = quadrantForData(d);
+
+                if (quadrant == 0) return 0;
+                if (quadrant == 1) return radius / 2;
+                if (quadrant == 2) return -(radius / 2) - 6;
+             })
+             .attr('transform', (d, i) => {
+                const quadrant = quadrantForData(d);
+                const location = valueLocation(d, i);
+
+                let rotation = 0;
+                let x = location.x;
+                let y = location.y;
+
+                if (quadrant == 0) rotation = 0;
+                else if (quadrant == 1) rotation = 90;
+                else if (quadrant == 2) rotation = 0;
+                else if (quadrant == 3) rotation = -90;
+
+                return `translate(${x}, ${y})rotate(${rotation})`
+             })
              ;
 };
 
@@ -214,6 +278,15 @@ const Chart = ({
 
     return (
         <svg className='plate'>
+            <defs>
+                <filter x="-4.0%" y="-13.9%" width="108.0%" height="127.9%" filterUnits="objectBoundingBox" id="filter-g9odhc_gqf-2">
+                    <feMorphology radius="5" operator="erode" in="SourceAlpha" result="shadowSpreadInner1"></feMorphology>
+                    <feGaussianBlur stdDeviation="5" in="shadowSpreadInner1" result="shadowBlurInner1"></feGaussianBlur>
+                    <feOffset dx="1" dy="0" in="shadowBlurInner1" result="shadowOffsetInner1"></feOffset>
+                    <feComposite in="shadowOffsetInner1" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="shadowInnerInner1"></feComposite>
+                    <feColorMatrix values="0 0 0 0 0.396078431   0 0 0 0 0.262745098   0 0 0 0 0.129411765  0 0 0 0.703261582 0" type="matrix" in="shadowInnerInner1"></feColorMatrix>
+                </filter>
+            </defs>
             <g>
                 <Background />
                 <text 
