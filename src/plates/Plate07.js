@@ -6,7 +6,7 @@ import {
     select,
     scaleQuantile,
     min,
-    max
+    format
 } from 'd3';
 import { getSource07 } from '../util/data';
 import Background from '../components/Background';
@@ -189,13 +189,15 @@ const Visualization = ({
 
     const quadrantForData = data => getQuadrant(angleScale(value(data)));
 
+    const valueFormatter = format(",");
+
     container.selectAll('text.value')
              .data(data)
              .join(
                 enter => enter.append('text').classed('value', true)
              )
              .text(d => {
-                return `$${value(d)}`;
+                return `$${valueFormatter(value(d))}`;
              })
              .attr('text-anchor', d => {
                 const quadrant = quadrantForData(d);
