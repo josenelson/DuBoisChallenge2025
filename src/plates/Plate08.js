@@ -11,7 +11,7 @@ import {
 import { getSource08 } from '../util/data';
 import Background from '../components/Background';
 import { ensureElement } from '../util/d3util';
-import { describeArc, polarToCartesian } from '../util/geometry';
+import { snakePath } from '../util/geometry';
 
 const margins = {
     top: 20,
@@ -73,7 +73,18 @@ const Visualization = ({
              .data(data)
              .join(enter => enter.append('path').classed('mark', true))
              .attr('d', (d, i) => {
-                return '';
+                const x = 100;
+                const y = 100;
+                const width = 20;
+                const length = 400;
+
+                return snakePath({
+                    x: x,
+                    y: y,
+                    width: width,
+                    length: length,
+                    maxLength: 300
+                });
             })
             .attr('stroke', 'black')
             .attr('fill', 'black')
