@@ -70,27 +70,31 @@ const Visualization = ({
                                      .join(enter => enter.append('g').classed('container', true));
 
     container.selectAll('path.mark')
-             .data(data)
+             .data([data])
              .join(enter => enter.append('path').classed('mark', true))
              .attr('d', (d, i) => {
                 const x = 100;
                 const y = 100;
                 const width = 20;
-                const length = 400;
+                const length = 300;
+                const maxLength = 200;
+                const gap = 50;
 
                 return snakePath({
                     x: x,
                     y: y,
                     width: width,
                     length: length,
-                    maxLength: 300
+                    gap: gap,
+                    maxLength: maxLength
                 });
             })
             .attr('stroke', 'black')
-            .attr('fill', 'black')
-            .attr('stroke-width', 1)
-            .attr('stroke-opacity', 0.9)
-            .attr('fill-opacity', 0.65);
+            .attr('fill', 'none')
+            .attr('stroke-width', 3)
+            //.attr('stroke-opacity', 0.9)
+            .attr('fill-opacity', 0);
+            ;
 
     container.selectAll('text.y-label')
              .data(data)
