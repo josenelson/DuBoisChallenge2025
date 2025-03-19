@@ -6,6 +6,7 @@ import Plate02 from './plates/Plate02';
 import Plate03 from './plates/Plate03';
 import Plate04 from './plates/Plate04';
 import Plate07 from './plates/Plate07';
+import Plate08 from './plates/Plate08';
 
 const App = () => {
     return (
@@ -16,6 +17,7 @@ const App = () => {
                 <Route path="/plate03" element={withContainer(<Plate03 />)} />
                 <Route path="/plate04" element={withContainer(<Plate04 />)} />
                 <Route path="/plate07" element={withContainer(<Plate07 />)} />
+                <Route path="/plate08" element={withContainer(<Plate08 />)} />
             </Routes>
         </BrowserRouter>
     );

@@ -84,6 +84,19 @@ const getSource07 = async function() {
     return transformedData;
 }
 
+const getSource08 = async function() {
+    const data = await csv("/data08.csv");
+
+    const transformedData = data.map(d => {
+        return {
+            occupation: d['Occupation'],
+            count: d['Count'] * 1
+        }
+    });
+
+    return transformedData;
+}
+
 export { 
     getSource01, 
     getSource02, 
@@ -91,5 +104,6 @@ export {
     getShape03, 
     getCountyData03, 
     getSource04,
-    getSource07
+    getSource07,
+    getSource08
 };
