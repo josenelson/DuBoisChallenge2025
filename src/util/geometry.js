@@ -71,28 +71,30 @@ const snakePath = ({
 
 	const loops = maxLength < length ? Math.ceil(length / maxLength) : 1;
 	const reminder = maxLength < length ? length % maxLength : length;
-	
+
 	for(let loop = 1; loop <= loops; loop ++) {
 		const isEnd = loop == loops;
 		const previousPoint = points[points.length - 1];
 		let nextX;
 		
 		if (isEnd) {
+			let adjustedReminder = reminder == 0 ? maxLength : reminder;
+
 			if (currentDirection == 1) {
-				nextX = previousPoint.x + reminder;
+				nextX = previousPoint.x + adjustedReminder;
 				// Add the horizontal line
 				points.push({x: nextX, y: previousPoint.y, direction: currentDirection, curve: false, isReverse: false});
 
 				// Add the vertical line
 				points.push({x: nextX, y: previousPoint.y + width, direction: currentDirection, curve: false, isReverse: false});
 			} else {
-				nextX = previousPoint.x - reminder;
+				nextX = previousPoint.x - adjustedReminder;
 				
 				// Add the horizontal line
 				points.push({x: nextX, y: previousPoint.y, direction: currentDirection, curve: false, isReverse: false});
 
 				// Add the vertical line
-				points.push({x: nextX, y: previousPoint.y + width, direction: currentDirection, curve: false, isReverse: false});
+				points.push({x: nextX, y: previousPoint.y - width, direction: currentDirection, curve: false, isReverse: false});
 			}
 		} else {
 			if (currentDirection == 1) {

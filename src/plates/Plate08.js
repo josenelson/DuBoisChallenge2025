@@ -76,7 +76,7 @@ const Visualization = ({
                 const x = 100;
                 const y = 100;
                 const width = 20;
-                const length = 300;
+                const length = 800;
                 const maxLength = 200;
                 const gap = 50;
 
