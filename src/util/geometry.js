@@ -98,7 +98,7 @@ const snakePath = ({
 			}
 		} else {
 			if (currentDirection == 1) {
-				nextX = previousPoint.x + maxLength;
+				nextX = x + maxLength;
 
 				// Add the horizontal line
 				points.push({x: nextX, y: previousPoint.y, direction: currentDirection, curve: false, isReverse: false});
@@ -119,6 +119,42 @@ const snakePath = ({
 		currentDirection = currentDirection * (-1);
 	}
 
+	for(let loop = loops; loop >=1; loop--) {
+		const isEnd = loop == 1;
+		const previousPoint = points[points.length - 1];
+		let nextX;
+		
+		if (isEnd) {
+			nextX = x;
+			// Add the horizontal line, but don't add the vertical line since we will close it with the Z command
+			points.push({x: nextX, y: previousPoint.y, direction: currentDirection, curve: false, isReverse: true});
+			
+		} else {
+			if (currentDirection == 1) { // direction: ---->
+				nextX = x + maxLength - width;
+
+				// Add the horizontal line
+				points.push({x: nextX, y: previousPoint.y, direction: currentDirection, curve: false, isReverse: true});
+
+				// Add the vertical line
+				points.push({x: nextX, y: previousPoint.y - gap, direction: currentDirection, curve: true, isReverse: true});
+			} else { // direction: <-------
+				nextX = x;
+
+				// Add the horizontal line
+				points.push({x: nextX, y: previousPoint.y, direction: currentDirection, curve: false, isReverse: true});
+
+				// Add the vertical line
+				points.push({x: nextX, y: previousPoint.y - gap - (width * 2), direction: currentDirection, curve: true, isReverse: true});
+			}
+		}
+
+		currentDirection = currentDirection * (-1);
+	}
+
+	// Now need to reverse the direction
+
+
 	console.log(points);
 
 	const d = points.map((point, index, points) => {
@@ -131,7 +167,7 @@ const snakePath = ({
 	});
 
 	// Close the path, don't close it now
-	//d.push('Z');
+	d.push('Z');
 
 	return d.join(' ');
 }
