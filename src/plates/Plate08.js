@@ -76,9 +76,9 @@ const Visualization = ({
                 const x = 100;
                 const y = 100;
                 const width = 20;
-                const length = 400;
+                const length = 900;
                 const maxLength = 200;
-                const gap = 50;
+                const gap = 20;
 
                 return snakePath({
                     x: x,
