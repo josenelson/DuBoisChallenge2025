@@ -98,7 +98,7 @@ const snakePath = ({
 			}
 		} else {
 			if (currentDirection == 1) {
-				nextX = x + maxLength;
+				nextX = x + maxLength - gap;
 
 				// Add the horizontal line
 				points.push({x: nextX, y: previousPoint.y, direction: currentDirection, curve: false, isReverse: false});
@@ -106,7 +106,10 @@ const snakePath = ({
 				// Add the vertical line
 				points.push({x: nextX, y: previousPoint.y + gap + (2 * width), direction: currentDirection, curve: true, isReverse: false});
 			} else {
-				nextX = x + width;
+				// Issue: when wrapping back around the curve is going past the origin point x because of the 
+				//		radius, this is ok for now but need to revisit this in the future
+				//		need to bring it back by 1 radius?
+				nextX = x + width - gap;
 
 				// Add the horizontal line
 				points.push({x: nextX, y: previousPoint.y, direction: currentDirection, curve: false, isReverse: false});
