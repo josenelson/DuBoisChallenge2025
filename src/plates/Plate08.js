@@ -10,7 +10,7 @@ import {
 } from 'd3';
 import { getSource08 } from '../util/data';
 import Background from '../components/Background';
-import { ensureElement } from '../util/d3util';
+import { ensureElement, layoutContainersVertically } from '../util/d3util';
 import { snakePath } from '../util/geometry';
 
 const margins = {
@@ -67,40 +67,48 @@ const Visualization = ({
 
     let container = parentSelection.selectAll('g.container')
                                      .data([data])
-                                     .join(enter => enter.append('g').classed('container', true));
+                                     .join(enter => enter.append('g').classed('container', true))
+                                     .attr('transform', `translate(${xRange[0]}, ${yRange[0]})`);
 
-    container.selectAll('path.mark')
-             .data([data])
-             .join(enter => enter.append('path').classed('mark', true))
-             .attr('d', (d, i) => {
-                const x = 100;
-                const y = 100;
-                const width = 20;
-                const length = 900;
-                const maxLength = 200;
-                const gap = 20;
+    const markContainer = container.selectAll('g.mark')
+                                   .data(data)
+                                   .join(enter => {
+                                        const innerContainer = enter.append('g').classed('mark', true);
+            
+                                        innerContainer.append('path').classed('mark', true);
+                                        innerContainer.append('text').classed('label', true);
+                                        innerContainer.append('text').classed('value', true);
+                                    
+                                        return innerContainer;
+                                   });
 
-                return snakePath({
-                    x: x,
-                    y: y,
-                    width: width,
-                    length: length,
-                    gap: gap,
-                    maxLength: maxLength
-                });
-            })
-            .attr('stroke', 'black')
-            .attr('fill', 'none')
-            .attr('stroke-width', 3)
-            //.attr('stroke-opacity', 0.9)
-            .attr('fill-opacity', 0);
-            ;
+    markContainer.selectAll('path.mark')
+                 .attr('d', (d, i) => {
+                    // TODO: migrate this 
+                    const x = 0;
+                    const y = 0;
+                    const width = 20;
+                    const length = 900;
+                    const maxLength = 200;
+                    const gap = 20;
 
-    container.selectAll('text.y-label')
-             .data(data)
-             .join(
-                enter => enter.append('text').classed('value-label', true)
-             )
+                    return snakePath({
+                        x: x,
+                        y: y,
+                        width: width,
+                        length: length,
+                        gap: gap,
+                        maxLength: maxLength
+                    });
+                 })
+                 .attr('stroke', 'black')
+                 .attr('fill', 'none')
+                 .attr('stroke-width', 3)
+                 //.attr('stroke-opacity', 0.9)
+                 .attr('fill-opacity', 0);
+                 ;
+
+    markContainer.select('text.label')
              .attr('x', 0)
              .attr('y', 0)
              .text(d => {
@@ -114,6 +122,11 @@ const Visualization = ({
              .attr('font-size', 14)
              .attr('dx', -5)
              ;
+
+    layoutContainersVertically({
+        selection: markContainer,
+        spacing: 20
+    });
 };
 
 const Chart = ({

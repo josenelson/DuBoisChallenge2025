@@ -13,4 +13,24 @@ const ensureElement = ({
     return element;
 }
 
-export { ensureElement };
+const layoutContainersVertically = ({
+    selection,
+    spacing
+}) => {
+    const nodes = selection.nodes();
+    const bbBoxes = nodes.map(d => d.getBBox());
+
+    let currentY = 0;
+    let currentBBox;
+
+    selection.attr('transform', (_, i) => {
+        currentBBox = bbBoxes[i];
+        
+        const newY = currentY;
+        currentY = currentY + currentBBox.y + currentBBox.height + spacing;
+
+        return `translate(${0}, ${newY})`;
+    });
+}
+
+export { ensureElement, layoutContainersVertically };
