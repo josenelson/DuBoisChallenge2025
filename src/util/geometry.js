@@ -58,7 +58,7 @@ const describeArc = ({
 const snakePath = ({
 	x,
 	y,
-	width = 10,
+	width,
 	length,
 	maxLength,
 	gap

@@ -26,6 +26,10 @@ const TitleTextStyle = {
     font: "1.2em 'B52-ULC W00 ULC'"
 }
 
+const labelSize = 200;
+
+const barSize = 12;
+
 const getXRange = (size) => {
     const leftMargin = margins.left;
     
@@ -50,17 +54,26 @@ const Visualization = ({
 }) => {
     if (data.length == 0) return;
 
+    // Add the index to all the items
+    data.forEach((d, i) => {
+        d.index = i;
+    });
+
     // Data ranges
     const count = d => d.count;
     const occupation = d => d.occupation;
     
     const countRange = extent(data, count);
-    const occupationRange = extent(data, occupation);
+    const occupationRange = extent(data, occupation); //TODO: remove?
 
     const yRange = getYRange(size);
     const xRange = getXRange(size);
+    const maxBarWidth = xRange[1] - xRange[0] - labelSize;
 
     // Scales
+    // Sort the values from lowest to highest, we don't include the highest value in the count
+    const counts = data.map(count).sort((a, b) => b - a);
+    const xScale = scaleLinear([0, counts[1]], [0, maxBarWidth]);
     
     // Selections
     const parentSelection = select(element);
@@ -82,35 +95,32 @@ const Visualization = ({
                                         return innerContainer;
                                    });
 
-    markContainer.selectAll('path.mark')
-                 .attr('d', (d, i) => {
-                    // TODO: migrate this 
-                    const x = 0;
-                    const y = 0;
-                    const width = 20;
-                    const length = 900;
-                    const maxLength = 200;
-                    const gap = 20;
+    const pathGenerator = d => {
+        const calculatedLength = xScale(count(d));
 
-                    return snakePath({
-                        x: x,
-                        y: y,
-                        width: width,
-                        length: length,
-                        gap: gap,
-                        maxLength: maxLength
-                    });
-                 })
+        const path = snakePath({
+            x: labelSize,
+            y: 0,
+            width: barSize,
+            gap: barSize,
+            length: calculatedLength,
+            maxLength: maxBarWidth
+        });
+
+        return path;
+    }
+
+    markContainer.selectAll('path.mark')
+                 .attr('d', pathGenerator)
                  .attr('stroke', 'black')
                  .attr('fill', 'none')
                  .attr('stroke-width', 3)
-                 //.attr('stroke-opacity', 0.9)
                  .attr('fill-opacity', 0);
                  ;
 
     markContainer.select('text.label')
-             .attr('x', 0)
-             .attr('y', 0)
+             .attr('x', labelSize - 3)
+             .attr('y', barSize / 2)
              .text(d => {
                 return occupation(d);
              })
@@ -119,7 +129,7 @@ const Visualization = ({
              .attr('font-family', 'Charter')
              .attr('font-weight', 'bold')
              .attr('fill-opacity', 0.9)
-             .attr('font-size', 14)
+             .attr('font-size', 11)
              .attr('dx', -5)
              ;
 
