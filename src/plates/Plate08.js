@@ -10,7 +10,7 @@ import {
 } from 'd3';
 import { getSource08 } from '../util/data';
 import Background from '../components/Background';
-import { ensureElement, layoutContainersVertically } from '../util/d3util';
+import { ensureElement, layoutContainersVertically, layoutContainersVerticallyWithAggregation } from '../util/d3util';
 import { snakePath } from '../util/geometry';
 
 const margins = {
@@ -29,6 +29,8 @@ const TitleTextStyle = {
 const labelSize = 200;
 
 const barSize = 12;
+
+const aggregateThreshold = 2500;
 
 const getXRange = (size) => {
     const leftMargin = margins.left;
@@ -54,15 +56,27 @@ const Visualization = ({
 }) => {
     if (data.length == 0) return;
 
+    // Getters
+    const count = d => d.count;
+    const occupation = d => d.occupation;
+
+    // Aggregation for lower values
+    const aggregatedValues = data.filter(d => count(d) <= aggregateThreshold);
+    const aggregatedValuesRange = [aggregatedValues[0], aggregatedValues[aggregatedValues.length - 1]];
+    const aggregatedTotal = aggregatedValues.reduce((previous, next) => previous + count(next), 0);
+
+    data.push({
+        count: aggregatedTotal,
+        occupation: 'aggregated',
+        isAggregated: true
+    });
+
     // Add the index to all the items
     data.forEach((d, i) => {
         d.index = i;
     });
 
-    // Data ranges
-    const count = d => d.count;
-    const occupation = d => d.occupation;
-
+    // Ranges
     const yRange = getYRange(size);
     const xRange = getXRange(size);
     const maxBarWidth = xRange[1] - xRange[0] - labelSize;
@@ -127,6 +141,7 @@ const Visualization = ({
              .attr('x', labelSize - 3)
              .attr('y', barSize / 2)
              .text(d => {
+                if (d.isAggregated) return '';
                 return occupation(d);
              })
              .attr('text-anchor', 'end')
@@ -138,9 +153,11 @@ const Visualization = ({
              .attr('dx', -5)
              ;
 
-    layoutContainersVertically({
+    layoutContainersVerticallyWithAggregation({
         selection: markContainer,
-        spacing: 18
+        spacing: 18,
+        isAggregatedNode: d => d.isAggregated,
+        shouldAggregate: d => count(d) <= aggregateThreshold
     });
 };
 
