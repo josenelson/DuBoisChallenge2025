@@ -62,9 +62,6 @@ const Visualization = ({
     // Data ranges
     const count = d => d.count;
     const occupation = d => d.occupation;
-    
-    const countRange = extent(data, count);
-    const occupationRange = extent(data, occupation); //TODO: remove?
 
     const yRange = getYRange(size);
     const xRange = getXRange(size);
@@ -88,6 +85,7 @@ const Visualization = ({
                                    .join(enter => {
                                         const innerContainer = enter.append('g').classed('mark', true);
             
+                                        innerContainer.append('path').classed('mark-background', true);
                                         innerContainer.append('path').classed('mark', true);
                                         innerContainer.append('text').classed('label', true);
                                         innerContainer.append('text').classed('value', true);
@@ -110,12 +108,19 @@ const Visualization = ({
         return path;
     }
 
+    markContainer.selectAll('path.mark-background')
+                 .attr('d', pathGenerator)
+                 
+                 .attr('filter', 'url(#filter-g9odhc_gqf-2)')
+                 ;
+
     markContainer.selectAll('path.mark')
                  .attr('d', pathGenerator)
-                 .attr('stroke', 'black')
-                 .attr('fill', 'none')
-                 .attr('stroke-width', 3)
-                 .attr('fill-opacity', 0);
+                 .attr('fill', '#DC143C')
+                 .attr('fill-opacity', '0.4')
+                 .attr('stroke', '#654321')
+                 .attr('stroke-opacity', '0.2')
+                 .attr('stroke-width', 2)
                  ;
 
     markContainer.select('text.label')
@@ -135,7 +140,7 @@ const Visualization = ({
 
     layoutContainersVertically({
         selection: markContainer,
-        spacing: 20
+        spacing: 18
     });
 };
 

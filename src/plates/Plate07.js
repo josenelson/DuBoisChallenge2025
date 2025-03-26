@@ -108,7 +108,7 @@ const Visualization = ({
 
                 return path;
              })
-             .attr('filter', 'url(#filter-g9odhc_gqf-2)');;
+             .attr('filter', 'url(#filter-g9odhc_gqf-2)');
 
     container.selectAll('path.mark')
              .data(data)
