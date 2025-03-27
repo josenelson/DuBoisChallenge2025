@@ -65,12 +65,14 @@ const Visualization = ({
     const aggregatedValuesRange = [aggregatedValues[0], aggregatedValues[aggregatedValues.length - 1]];
     const aggregatedTotal = aggregatedValues.reduce((previous, next) => previous + count(next), 0);
 
-    data.push({
-        count: aggregatedTotal,
-        occupation: 'aggregated',
-        isAggregated: true
-    });
-
+    if (!data[data.length - 1].isAggregated) {
+        data.push({
+            count: aggregatedTotal,
+            occupation: 'aggregated',
+            isAggregated: true
+        });
+    }
+    
     // Add the index to all the items
     data.forEach((d, i) => {
         d.index = i;
@@ -126,12 +128,12 @@ const Visualization = ({
         return path;
     }
 
-    markContainer.selectAll('path.mark-background')
+    markContainer.select('path.mark-background')
                  .attr('d', pathGenerator)
                  .attr('filter', 'url(#filter-g9odhc_gqf-2)')
                  ;
 
-    markContainer.selectAll('path.mark-foreground')
+    markContainer.select('path.mark-foreground')
                  .attr('d', pathGenerator)
                  .attr('fill', '#DC143C')
                  .attr('fill-opacity', '0.4')
