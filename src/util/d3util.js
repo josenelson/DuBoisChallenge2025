@@ -48,7 +48,7 @@ const layoutContainersVerticallyWithAggregation = ({
     let totalAggregationCount = 0;
     let aggregate;
     let aggregatedNode;
-    let currentSpacing;
+    let currentSpacing = spacing;
     let startAggregatedPosition = {x: 0, y: 0};
 
     selection.attr('transform', (d, i) => {
@@ -57,15 +57,15 @@ const layoutContainersVerticallyWithAggregation = ({
 
         currentBBox = bbBoxes[i];
 
-        // Add an extra spacing for the first node to be aggreated
-        if (aggregate && totalAggregationCount === 0) {
-            currentSpacing = spacing * 2;
-        } else {
-            currentSpacing = spacing;
-        }
-
         let newX = 0;
         let newY = currentY;
+
+        // Add an extra spacing for the first node to be aggreated
+        let resolvedSpacing = spacing;
+        if (aggregate && totalAggregationCount == 0) {
+            newY += spacing;
+            currentY += spacing;
+        }
 
         if (aggregatedNode) {
             // First find the first bbox and last bbox, we assume the aggregated node is the last
@@ -73,14 +73,14 @@ const layoutContainersVerticallyWithAggregation = ({
             newX = startAggregatedPosition.x;
             
             // Move the Y the the middle of the first aggregation node and currentY
-            newY = startAggregatedPosition.y + (currentBBox.height / 2) + ((currentY - startAggregatedPosition.y) / 2) - currentBBox.height - currentSpacing;
+            newY = startAggregatedPosition.y + (currentBBox.height / 2) + ((currentY - startAggregatedPosition.y) / 2) - currentBBox.height - resolvedSpacing;
             
         } else {
-            currentY = currentY + currentBBox.y + currentBBox.height + currentSpacing;
+            currentY = currentY + currentBBox.y + currentBBox.height + resolvedSpacing;
         }
 
         // Make sure we save the position for the first aggregator
-        if (aggregate && totalAggregationCount === 0) {
+        if (aggregate && totalAggregationCount == 0) {
             startAggregatedPosition.x = currentBBox.x + currentBBox.width;
             startAggregatedPosition.y = currentY;
         }
