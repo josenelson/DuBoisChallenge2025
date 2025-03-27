@@ -81,8 +81,8 @@ const layoutContainersVerticallyWithAggregation = ({
 
         // Make sure we save the position for the first aggregator
         if (aggregate && totalAggregationCount == 0) {
-            startAggregatedPosition.x = currentBBox.x + currentBBox.width;
-            startAggregatedPosition.y = currentY;
+            startAggregatedPosition.x = currentBBox.x + currentBBox.width + spacing * 2;
+            startAggregatedPosition.y = currentY - (currentBBox.height);
         }
 
         if (aggregate) {

@@ -115,7 +115,7 @@ const Visualization = ({
         const calculatedLength = xScale(count(d));
 
         const path = snakePath({
-            x: labelSize,
+            x: d.isAggregated ? 0 : labelSize,
             y: 0,
             width: barSize,
             gap: barSize,
