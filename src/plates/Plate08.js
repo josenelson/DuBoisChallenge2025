@@ -20,13 +20,13 @@ const margins = {
     right: 20
 }
 
-const titleText = "WIP Visualization";
+const titleText = "Occupations for Georgia Black Males over 10 in 1890";
 
 const TitleTextStyle = {
     font: "1.2em 'B52-ULC W00 ULC'"
 }
 
-const labelSize = 200;
+const labelSize = 250;
 
 const barSize = 12;
 
@@ -145,11 +145,26 @@ const Visualization = ({
                  ;
 
     markContainer.select('text.label')
-             .attr('x', labelSize - 3)
+             .attr('x', labelSize - 40)
              .attr('y', barSize / 2)
              .text(d => {
                 if (d.isAggregated) return '';
                 return occupation(d);
+             })
+             .attr('text-anchor', 'end')
+             .attr('alignment-baseline', 'middle')
+             .attr('font-family', 'Charter')
+             .attr('fill-opacity', 0.9)
+             .attr('font-size', 11)
+             .attr('dx', -5)
+             ;
+
+    markContainer.select('text.value')
+             .attr('x', labelSize - 3)
+             .attr('y', barSize / 2)
+             .text(d => {
+                if (d.isAggregated) return '';
+                return count(d);
              })
              .attr('text-anchor', 'end')
              .attr('alignment-baseline', 'middle')
@@ -178,7 +193,6 @@ const Visualization = ({
       .attr('stroke-width', 2)
       .attr('d', connectorPath({
         fromNodeSelection: markContainer.selectAll(`path.mark-foreground[data-should-aggregate='1']`),
-        toNodeSelection: markContainer.selectAll(`path.mark-foreground[data-aggregated='1']`),
       }))
       ;
 };
