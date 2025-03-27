@@ -98,13 +98,13 @@ const Visualization = ({
                                      .data([data])
                                      .join(enter => enter.append('g').classed('container-connectors', true));
                                      
-    const markContainer = container.selectAll('g.mark')
+    const markContainer = container.selectAll('g.mark-container')
                                    .data(data)
                                    .join(enter => {
-                                        const innerContainer = enter.append('g').classed('mark', true);
+                                        const innerContainer = enter.append('g').classed('mark-container', true);
             
                                         innerContainer.append('path').classed('mark-background', true);
-                                        innerContainer.append('path').classed('mark', true);
+                                        innerContainer.append('path').classed('mark-foreground', true);
                                         innerContainer.append('text').classed('label', true);
                                         innerContainer.append('text').classed('value', true);
                                     
@@ -131,7 +131,7 @@ const Visualization = ({
                  .attr('filter', 'url(#filter-g9odhc_gqf-2)')
                  ;
 
-    markContainer.selectAll('path.mark')
+    markContainer.selectAll('path.mark-foreground')
                  .attr('d', pathGenerator)
                  .attr('fill', '#DC143C')
                  .attr('fill-opacity', '0.4')
@@ -175,8 +175,8 @@ const Visualization = ({
       .attr('stroke-opacity', '0.2')
       .attr('stroke-width', 2)
       .attr('d', connectorPath({
-        fromNodeSelection: markContainer.selectAll(`path.mark[data-should-aggregate='1']`),
-        toNodeSelection: markContainer.selectAll(`path.mark[data-aggregated='1']`),
+        fromNodeSelection: markContainer.selectAll(`path.mark-foreground[data-should-aggregate='1']`),
+        toNodeSelection: markContainer.selectAll(`path.mark-foreground[data-aggregated='1']`),
       }))
       ;
 };

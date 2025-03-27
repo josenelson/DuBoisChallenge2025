@@ -212,20 +212,17 @@ const findLargestBox = arr => {
 }
 
 const connectorPath = ({
-	fromNodeSelection,
-	toNodeSelection
+	fromNodeSelection
 }) => {
 	const fromNodes = fromNodeSelection.nodes().map(d => d.getBoundingClientRect());
-	const toNodes = toNodeSelection.nodes().map(d => d.getBoundingClientRect());
 
 	const fromBBox = findLargestBox(fromNodes);
-	const toBBox = findLargestBox(toNodes);
 
 	const gap = 10;
 
 	let startX = fromBBox.x + fromBBox.width - gap;
 	let startY = fromBBox.y - gap;
-
+	let midY = fromBBox.y + (fromBBox.height / 2);
 	let endY = fromBBox.y + fromBBox.height + gap;
 
 	const points = [
@@ -234,7 +231,7 @@ const connectorPath = ({
 		`L ${startX + gap * 2} ${startY}`,
 
 		// Move down to the arrow
-		`L ${startX + gap * 2} ${toBBox.y + (toBBox.height / 2) - gap * 2}`,
+		`L ${startX + gap * 2} ${midY - gap}`,
 
 		// Start the arrow
 		`l ${gap} ${gap}`,
