@@ -183,4 +183,73 @@ const snakePath = ({
 	return d.join(' ');
 }
 
-export { describeArc, polarToCartesian, snakePath };
+const findLargestBox = arr => {
+	let x1 = 0;
+	let y1 = 0;
+	let x2 = 0;
+	let y2 = 0;
+
+	arr.forEach(({x, y , width, height}, index) => {
+		if (index === 0) {
+			x1 = x;
+			y1 = y;
+			x2 = x + width;
+			y2 = y + height;
+		} else {
+			if (x < x1) x1 = x;
+			if (y < y1) y1 = y;
+			if (x + width > x2) x2 = x + width;
+			if (y + height > y2) y2 = y + height;
+		}
+	});
+
+	return {
+		x: x1,
+		y: y1, 
+		width: x2 - x1,
+		height: y2 - y1
+	};
+}
+
+const connectorPath = ({
+	fromNodeSelection,
+	toNodeSelection
+}) => {
+	const fromNodes = fromNodeSelection.nodes().map(d => d.getBoundingClientRect());
+	const toNodes = toNodeSelection.nodes().map(d => d.getBoundingClientRect());
+
+	const fromBBox = findLargestBox(fromNodes);
+	const toBBox = findLargestBox(toNodes);
+
+	const gap = 10;
+
+	let startX = fromBBox.x + fromBBox.width - gap;
+	let startY = fromBBox.y - gap;
+
+	let endY = fromBBox.y + fromBBox.height + gap;
+
+	const points = [
+		// First elbow
+		`M ${startX} ${startY}`,
+		`L ${startX + gap * 2} ${startY}`,
+
+		// Move down to the arrow
+		`L ${startX + gap * 2} ${toBBox.y + (toBBox.height / 2) - gap * 2}`,
+
+		// Start the arrow
+		`l ${gap} ${gap}`,
+
+		// Close the arrow
+		`l ${-gap} ${gap}`,
+
+		// Continue moving down
+		`L ${startX + gap * 2} ${endY}`,
+
+		// Second elbow
+		`L ${startX} ${endY}`
+	];
+
+	return points.join('' );
+}
+
+export { describeArc, polarToCartesian, snakePath, connectorPath };

@@ -11,7 +11,7 @@ import {
 import { getSource08 } from '../util/data';
 import Background from '../components/Background';
 import { ensureElement, layoutContainersVertically, layoutContainersVerticallyWithAggregation } from '../util/d3util';
-import { snakePath } from '../util/geometry';
+import { connectorPath, snakePath } from '../util/geometry';
 
 const margins = {
     top: 20,
@@ -93,7 +93,11 @@ const Visualization = ({
                                      .data([data])
                                      .join(enter => enter.append('g').classed('container', true))
                                      .attr('transform', `translate(${xRange[0]}, ${yRange[0]})`);
-
+    
+    let connectorContainer = parentSelection.selectAll('g.container-connectors')
+                                     .data([data])
+                                     .join(enter => enter.append('g').classed('container-connectors', true));
+                                     
     const markContainer = container.selectAll('g.mark')
                                    .data(data)
                                    .join(enter => {
@@ -124,7 +128,6 @@ const Visualization = ({
 
     markContainer.selectAll('path.mark-background')
                  .attr('d', pathGenerator)
-                 
                  .attr('filter', 'url(#filter-g9odhc_gqf-2)')
                  ;
 
@@ -135,6 +138,8 @@ const Visualization = ({
                  .attr('stroke', '#654321')
                  .attr('stroke-opacity', '0.2')
                  .attr('stroke-width', 2)
+                 .attr('data-aggregated', d => d.isAggregated ? 1 : 0)
+                 .attr('data-should-aggregate', d => count(d) <= aggregateThreshold ? 1 : 0)
                  ;
 
     markContainer.select('text.label')
@@ -159,6 +164,21 @@ const Visualization = ({
         isAggregatedNode: d => d.isAggregated,
         shouldAggregate: d => count(d) <= aggregateThreshold
     });
+
+    // Add the connector line
+    ensureElement({
+        parent: connectorContainer,
+        elementType: 'path',
+        className: 'connector'
+    }).attr('fill', 'none')
+      .attr('stroke', '#654321')
+      .attr('stroke-opacity', '0.2')
+      .attr('stroke-width', 2)
+      .attr('d', connectorPath({
+        fromNodeSelection: markContainer.selectAll(`path.mark[data-should-aggregate='1']`),
+        toNodeSelection: markContainer.selectAll(`path.mark[data-aggregated='1']`),
+      }))
+      ;
 };
 
 const Chart = ({
