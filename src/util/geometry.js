@@ -4,7 +4,7 @@ const polarToCartesian = ({
 	radius,
 	angleInDegrees
 }) => {
-	const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+	const angleInRadians = angleInDegrees * Math.PI / 180.0;
 
 	return {
 		x: centerX + (radius * Math.cos(angleInRadians)),
@@ -17,7 +17,9 @@ const describeArc = ({
 	y,
 	outerRadius,
 	innerRadius,
-	angle
+	endAngle = 0,
+	startAngle = 0,
+	direction = 1
 }) => {
 	/*
 	Arc command for reference:
@@ -32,15 +34,15 @@ const describeArc = ({
 		x, y: the end point of the arc
 	*/
 
-	const outerStartPoint = polarToCartesian({ centerX: x, centerY: y, radius: outerRadius, angleInDegrees: 0 });
-	const outerEndPoint = polarToCartesian({ centerX: x, centerY: y, radius: outerRadius, angleInDegrees: angle });
+	const outerStartPoint = polarToCartesian({ centerX: x, centerY: y, radius: outerRadius, angleInDegrees: startAngle });
+	const outerEndPoint = polarToCartesian({ centerX: x, centerY: y, radius: outerRadius, angleInDegrees: endAngle });
 
-	const innerStartPoint = polarToCartesian({ centerX: x, centerY: y, radius: innerRadius, angleInDegrees: 0 });
-	const innerEndPoint = polarToCartesian({ centerX: x, centerY: y, radius: innerRadius, angleInDegrees: angle });
+	const innerStartPoint = polarToCartesian({ centerX: x, centerY: y, radius: innerRadius, angleInDegrees: startAngle });
+	const innerEndPoint = polarToCartesian({ centerX: x, centerY: y, radius: innerRadius, angleInDegrees: endAngle });
 
-	const largeArcFlag = angle > 180 ? 1 : 0;
+	const largeArcFlag = endAngle - startAngle > 180 ? 1 : 0;
 
-	let d = [
+	const d = [
 		// Move to start point
 		`M ${outerStartPoint.x}, ${outerStartPoint.y}`,
 		// Draw the outer arc

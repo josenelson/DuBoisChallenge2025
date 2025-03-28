@@ -97,6 +97,20 @@ const getSource08 = async function() {
     return transformedData;
 }
 
+const getSource09 = async function() {
+    const data = await csv("/data09.csv");
+    
+    const transformedData = data.map(d => {
+        return {
+            group: d['Group'] === 'Whites' ? 'w' : 'b',
+            occupation: d['Occupation'],
+            percentage: d['Percentage'] * 1
+        }
+    });
+
+    return transformedData;
+}
+
 export { 
     getSource01, 
     getSource02, 
@@ -105,5 +119,6 @@ export {
     getCountyData03, 
     getSource04,
     getSource07,
-    getSource08
+    getSource08,
+    getSource09
 };
