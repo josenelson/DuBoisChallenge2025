@@ -84,12 +84,28 @@ const Visualization = ({
     const circleCenter = [xRange[0] + ((xRange[1] - xRange[0]) / 2), yRange[0] + ((yRange[1] - yRange[0]) / 2)];
     
     // Path generators
-    const groupBPathGenerator = (d, i) => {
+    const groupBAngles = (d, i) => {
         const percentage = getPercentage(d);
         const accumulatedPercentage = groupBAcc[i];
 
         const startAngle = angleScaleGroupB(accumulatedPercentage);
         const endAngle = angleScaleGroupB(accumulatedPercentage + percentage);
+
+        return [startAngle, endAngle];
+    }
+
+    const groupWAngles = (d, i) => {
+        const percentage = getPercentage(d);
+        const accumulatedPercentage = groupWAcc[i];
+
+        const startAngle = angleScaleGroupW(accumulatedPercentage);
+        const endAngle = angleScaleGroupW(accumulatedPercentage + percentage);
+
+        return [startAngle, endAngle];
+    }
+
+    const groupBPathGenerator = (d, i) => {
+        const [startAngle, endAngle] = groupBAngles(d, i);
         
         const path = describeArc({
             x: circleCenter[0],
@@ -104,11 +120,7 @@ const Visualization = ({
     }
 
     const groupWPathGenerator = (d, i) => {
-        const percentage = getPercentage(d);
-        const accumulatedPercentage = groupWAcc[i];
-
-        const startAngle = angleScaleGroupW(accumulatedPercentage);
-        const endAngle = angleScaleGroupW(accumulatedPercentage + percentage);
+        const [startAngle, endAngle] = groupWAngles(d, i);
         
         const path = describeArc({
             x: circleCenter[0],
@@ -149,7 +161,7 @@ const Visualization = ({
              .attr('d', groupWPathGenerator)
             .attr('stroke', 'black')
             .attr('fill', (d) => {
-               return colorScale(getOccupation(d));
+                return colorScale(getOccupation(d));
             })
             .attr('stroke-width', 1)
             .attr('stroke-opacity', 0.9)

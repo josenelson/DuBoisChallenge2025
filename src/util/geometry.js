@@ -12,6 +12,20 @@ const polarToCartesian = ({
 	};
 }
 
+const describeArcPoint = ({
+	x,
+	y,
+	radius,
+	endAngle = 0,
+	startAngle = 0,
+}) => {
+	const midAngle = startAngle + ((endAngle - startAngle) / 2);
+
+	const point = polarToCartesian({ centerX: x, centerY: y, radius: radius, angleInDegrees: midAngle });
+
+	return point;
+}
+
 const describeArc = ({
 	x,
 	y,
@@ -19,7 +33,6 @@ const describeArc = ({
 	innerRadius,
 	endAngle = 0,
 	startAngle = 0,
-	direction = 1
 }) => {
 	/*
 	Arc command for reference:
@@ -251,4 +264,4 @@ const connectorPath = ({
 	return points.join('' );
 }
 
-export { describeArc, polarToCartesian, snakePath, connectorPath };
+export { describeArc, polarToCartesian, snakePath, connectorPath, describeArcPoint };
