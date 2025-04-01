@@ -11,7 +11,7 @@ import {
 import { getSource08, getSource09 } from '../util/data';
 import Background from '../components/Background';
 import { ensureElement, layoutContainersVertically, layoutContainersVerticallyWithAggregation } from '../util/d3util';
-import { describeArc } from '../util/geometry';
+import { describeArc, describeArcPoint } from '../util/geometry';
 
 const margins = {
     top: 20,
@@ -59,6 +59,8 @@ const Visualization = ({
     data
 }) => {
     if (data.length == 0) return;
+
+    const labelPointCache = {};
 
     // Getters
     const getGroup = d => d.group;
@@ -134,6 +136,34 @@ const Visualization = ({
         return path;
     }
 
+    const pointForPath = (d, i) => {
+        if (labelPointCache[i]) {
+            return labelPointCache[i];
+        }
+
+        const group = getGroup(d);
+        let angles;
+        if (group === 'b') {
+            angles = groupBAngles(d, i);
+        } else {
+            angles = groupWAngles(d, i - groupB.length);
+        }
+
+        const [startAngle, endAngle] = angles;
+
+        const point = describeArcPoint({
+            x: circleCenter[0],
+            y: circleCenter[1],
+            radius: circleRadius + 15,
+            startAngle: startAngle,
+            endAngle: endAngle
+        });
+
+        labelPointCache[i] = point;
+
+        return point;
+    }
+
     // Selections
     const parentSelection = select(element);
 
@@ -147,26 +177,87 @@ const Visualization = ({
              .data(groupB)
              .join(enter => enter.append('path').classed('mark-group-b', true))
              .attr('d', groupBPathGenerator)
-            .attr('stroke', 'black')
-            .attr('fill', (d) => {
+             .attr('stroke', 'black')
+             .attr('fill', (d) => {
                 return colorScale(getOccupation(d));
-            })
-            .attr('stroke-width', 1)
-            .attr('stroke-opacity', 0.9)
-            .attr('fill-opacity', 0.65);
+             })
+             .attr('stroke-width', 1)
+             .attr('stroke-opacity', 0.9)
+             .attr('fill-opacity', 0.65);
 
+    // Second group
     container.selectAll('path.mark-group-w')
              .data(groupW)
              .join(enter => enter.append('path').classed('mark-group-w', true))
              .attr('d', groupWPathGenerator)
-            .attr('stroke', 'black')
-            .attr('fill', (d) => {
+             .attr('stroke', 'black')
+             .attr('fill', (d) => {
                 return colorScale(getOccupation(d));
-            })
-            .attr('stroke-width', 1)
-            .attr('stroke-opacity', 0.9)
-            .attr('fill-opacity', 0.65);
-        
+             })
+             .attr('stroke-width', 1)
+             .attr('stroke-opacity', 0.9)
+             .attr('fill-opacity', 0.65);
+
+    // Labels for values
+    container.selectAll('text.value-label')
+             .data(data)
+             .join(enter => enter.append('text').classed('value-label', true))
+             .attr('x', (d, i) => {
+                const point = pointForPath(d, i);
+                return point.x;
+             })
+             .attr('y', (d, i) => {
+                const point = pointForPath(d, i);
+                return point.y;
+             })
+             .attr('text-anchor', 'end')
+             .attr('alignment-baseline', 'middle')
+             .attr('font-family', 'Charter')
+             .attr('font-weight', 'bold')
+             .attr('fill-opacity', 0.9)
+             .attr('font-size', 11)
+             .text(d => {
+                return `${getPercentage(d)}`;
+             })
+             ;
+
+    // Labels for groups
+    container.selectAll('text.group-label')
+             .data(['b', 'w'])
+             .join(enter => enter.append('text').classed('group-label', true))
+             .attr('x', circleCenter[0])
+             .attr('y', (d, i) => {
+                if (i == 0) {
+                    return circleCenter[1] - circleRadius;
+                }
+                return circleCenter[1] + circleRadius;
+             })
+             .attr('text-anchor', 'end')
+             .attr('font-family', 'Charter')
+             .attr('fill-opacity', 0.9)
+             .attr('font-size', 14)
+             .attr('dy', (_, i) => {
+                if (i === 0) {
+                    return '-2em';
+                }
+                return '2em';
+             })
+             .text(d => d)
+             ;
+    
+    // Legeng colors
+    container.selectAll('circle.legend-colors')
+             .data(occupations)
+             .join(enter => enter.append('circle').classed('circle.legend-colors', true))
+             .attr('cx', circleCenter[0])
+             .attr('cy', (_, i) => {
+                if (i == 0) {
+                    return circleCenter[1] - circleRadius;
+                }
+                return circleCenter[1] + circleRadius;
+             })
+             .attr('r', 10)
+             ;
 };
 
 const Chart = ({
