@@ -11,7 +11,7 @@ import {
 import { getSource08, getSource09 } from '../util/data';
 import Background from '../components/Background';
 import { ensureElement, layoutContainersVertically, layoutContainersVerticallyWithAggregation } from '../util/d3util';
-import { describeArc, describeArcPoint, legendLayout } from '../util/geometry';
+import { describeArc, describeArcPoint, legend2ColumnLayout } from '../util/geometry';
 
 const margins = {
     top: 20,
@@ -252,14 +252,14 @@ const Visualization = ({
     const point1 = describeArcPoint({x: circleCenter[0], y: circleCenter[1], radius: circleRadius, startAngle: groupBAngleRange[0], endAngle: groupBAngleRange[0]});
     const point2 = describeArcPoint({x: circleCenter[0], y: circleCenter[1], radius: circleRadius, startAngle: groupWAngleRange[0], endAngle: groupWAngleRange[0]});
 
-    const layout = legendLayout({
+    const layout = legend2ColumnLayout({
+        itemCount: occupations.length,
         startX: point1.x,
         startY: point1.y,
         endX: point2.x,
         endY: point2.y,
         bulletSize: bulletRadius * 1,
-        verticalSpacing: 10,
-        maxItemCountPerColumn: 3
+        verticalPadding: 60,
     });
 
     const legendPositions = occupations.reduce((acc, next, index) => {

@@ -268,27 +268,40 @@ const connectorPath = ({
 	Positions the elements in the grid with the bullet aligned to either left 
 	or right
 */
-const legendLayout = ({
+const legend2ColumnLayout = ({
+	itemCount,
 	startX, 
 	startY,
 	endX, 
 	endY,
 	bulletSize = 10,
-	verticalSpacing = 10,
-	horizontalSpacing = 10,
-	maxItemCountPerColumn
+	verticalPadding = 10,
+	horizontalSpacing = 10
 }) => {
 
 	// First calculate how many items we can fit on the right side
-	const verticalSpace = endY - startY; // This might be used later ?
+	const verticalSpace = endY - startY - (verticalPadding * 2);
+
+	// Calculate how many items we can fit per column
+	const rightColumnItemCount = Math.ceil(itemCount / 2);
+	const leftColumnItemCount = itemCount - rightColumnItemCount;
+
+	// Calculate the spacing between each item in each column
+	const rightColumnFreeSpacing = verticalSpace - (rightColumnItemCount * bulletSize);
+	const rightColumnItemSpacing = rightColumnFreeSpacing >= 10 ? rightColumnFreeSpacing / (rightColumnItemCount + 1) : 10;
+
+	const leftColumnFreeSpacing = verticalSpace - (leftColumnItemCount * bulletSize);
+	const leftColumnItemSpacing = leftColumnFreeSpacing >= 10 ? leftColumnFreeSpacing / (leftColumnItemCount + 1) : 10;
 
 	// 1 for right column, -1 for left column
-	const findColumn = itemIndex => itemIndex < maxItemCountPerColumn ? 1 : -1;
+	const findColumn = itemIndex => itemIndex < rightColumnItemCount ? 1 : -1;
+
 	const findRowYPosition = itemIndex => {
 		const column = findColumn(itemIndex);
-		const rowIndex = column === 1 ? itemIndex : itemIndex - maxItemCountPerColumn;
+		const rowIndex = column === 1 ? itemIndex : itemIndex - rightColumnItemCount;
+		const spacing = column === 1 ? rightColumnItemSpacing : leftColumnItemSpacing;
 
-		return startY + rowIndex * (bulletSize + verticalSpacing);
+		return startY + verticalPadding + (rowIndex + 1) * (bulletSize + spacing);
 	}
 	
 	// Return the position of bullet and text for the given item index
@@ -327,5 +340,5 @@ export {
 	snakePath, 
 	connectorPath, 
 	describeArcPoint,
-	legendLayout
+	legend2ColumnLayout
 };
