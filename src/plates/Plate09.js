@@ -83,7 +83,7 @@ const Visualization = ({
     const angleScaleGroupW = scaleLinear([0, 100], groupWAngleRange);
     const colorScale = scaleQuantile(occupations, ['#7e6583', '#4682b4', '#00aa00', '#dc143c', '#ffc0cb', '#ffd700', '#d2b48c', '#654321', '#000000']);
 
-    const circleTotalSize = min([yRange[1] - yRange[0], xRange[1] - xRange[0]]);
+    const circleTotalSize = min([yRange[1] - yRange[0], xRange[1] - xRange[0]]) - 32;
     const circleRadius = circleTotalSize / 2;
     const circleCenter = [xRange[0] + ((xRange[1] - xRange[0]) / 2), yRange[0] + ((yRange[1] - yRange[0]) / 2)];
     
@@ -156,7 +156,7 @@ const Visualization = ({
         const point = describeArcPoint({
             x: circleCenter[0],
             y: circleCenter[1],
-            radius: circleRadius + 15,
+            radius: circleRadius + 8,
             startAngle: startAngle,
             endAngle: endAngle
         });
@@ -212,37 +212,44 @@ const Visualization = ({
                 const point = pointForPath(d, i);
                 return point.y;
              })
-             .attr('text-anchor', 'end')
+             .attr('text-anchor', (d, i) => {
+                const point = pointForPath(d, i);
+                if (point.x >= circleCenter[0]) {
+                    return 'start';
+                }
+                return 'end';
+             })
              .attr('alignment-baseline', 'middle')
              .attr('font-family', 'Charter')
              .attr('font-weight', 'bold')
              .attr('fill-opacity', 0.9)
              .attr('font-size', 11)
              .text(d => {
-                return `${getPercentage(d)}`;
+                return `${getPercentage(d)}%`;
              })
              ;
 
     // Labels for groups
     container.selectAll('text.group-label')
-             .data(['b', 'w'])
+             .data(['BLACK', 'WHITE'])
              .join(enter => enter.append('text').classed('group-label', true))
              .attr('x', circleCenter[0])
-             .attr('y', (d, i) => {
+             .attr('y', (_, i) => {
                 if (i == 0) {
-                    return circleCenter[1] - circleRadius;
+                    return circleCenter[1] - circleRadius - 12;
                 }
-                return circleCenter[1] + circleRadius;
+                return circleCenter[1] + circleRadius + 12;
              })
-             .attr('text-anchor', 'end')
+             .attr('text-anchor', 'middle')
              .attr('font-family', 'Charter')
+             .attr('font-weight', 'bold')
              .attr('fill-opacity', 0.9)
              .attr('font-size', 14)
              .attr('dy', (_, i) => {
                 if (i === 0) {
-                    return '-2em';
+                    return '-1.2em';
                 }
-                return '2em';
+                return '1.2em';
              })
              .text(d => d)
              ;
@@ -266,12 +273,25 @@ const Visualization = ({
         acc[next] = layout(index);
         return acc;
     }, {});
-    console.log(legendPositions);
             
     // Legeng colors
-    container.selectAll('circle.legend-colors')
+    container.selectAll('circle.legend-colors-background')
              .data(occupations)
-             .join(enter => enter.append('circle').classed('legend-colors', true))
+             .join(enter => enter.append('circle').classed('legend-colors-background', true))
+             .attr('cx', d => {
+                const position = legendPositions[d];
+                return position.bullet.x;
+             })
+             .attr('cy', d => {
+                const position = legendPositions[d];
+                return position.bullet.y;
+             })
+             .attr('r', bulletRadius)
+             ;
+
+    container.selectAll('circle.legend-colors-foreground')
+             .data(occupations)
+             .join(enter => enter.append('circle').classed('legend-colors-foreground', true))
              .attr('cx', d => {
                 const position = legendPositions[d];
                 return position.bullet.x;
@@ -305,6 +325,7 @@ const Visualization = ({
              .attr('font-family', 'Charter')
              .attr('fill-opacity', 0.9)
              .attr('font-size', 11)
+             .attr('alignment-baseline', 'middle')
              .text(d => d);
 };
 
