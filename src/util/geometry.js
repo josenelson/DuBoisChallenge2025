@@ -264,4 +264,68 @@ const connectorPath = ({
 	return points.join('' );
 }
 
-export { describeArc, polarToCartesian, snakePath, connectorPath, describeArcPoint };
+/*
+	Positions the elements in the grid with the bullet aligned to either left 
+	or right
+*/
+const legendLayout = ({
+	startX, 
+	startY,
+	endX, 
+	endY,
+	bulletSize = 10,
+	verticalSpacing = 10,
+	horizontalSpacing = 10,
+	maxItemCountPerColumn
+}) => {
+
+	// First calculate how many items we can fit on the right side
+	const verticalSpace = endY - startY; // This might be used later ?
+
+	// 1 for right column, -1 for left column
+	const findColumn = itemIndex => itemIndex < maxItemCountPerColumn ? 1 : -1;
+	const findRowYPosition = itemIndex => {
+		const column = findColumn(itemIndex);
+		const rowIndex = column === 1 ? itemIndex : itemIndex - maxItemCountPerColumn;
+
+		return startY + rowIndex * (bulletSize + verticalSpacing);
+	}
+	
+	// Return the position of bullet and text for the given item index
+	return (itemIndex) => {
+		const column = findColumn(itemIndex);
+		const yPosition = findRowYPosition(itemIndex);
+		let bulletPosition;
+		let textPosition;
+		let alignment; // 1 for right, -1 for left
+
+		if (column == 1) {
+			// Right column, bullet is on the right and text is on the left of the bullet
+			bulletPosition = { x: endX, y: yPosition };
+
+			textPosition = { x: endX - bulletSize - horizontalSpacing, y: yPosition };
+			alignment = 1;
+
+		} else {
+			// Left column
+			bulletPosition = { x: startX, y: yPosition };
+			textPosition = { x: startX + bulletSize + horizontalSpacing, y: yPosition };
+			alignment = -1;
+		}
+
+		return {
+			bullet: bulletPosition,
+			text: textPosition,
+			alignment: alignment
+		}
+	}
+};
+
+export { 
+	describeArc, 
+	polarToCartesian, 
+	snakePath, 
+	connectorPath, 
+	describeArcPoint,
+	legendLayout
+};

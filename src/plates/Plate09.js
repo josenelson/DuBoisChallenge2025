@@ -11,7 +11,7 @@ import {
 import { getSource08, getSource09 } from '../util/data';
 import Background from '../components/Background';
 import { ensureElement, layoutContainersVertically, layoutContainersVerticallyWithAggregation } from '../util/d3util';
-import { describeArc, describeArcPoint } from '../util/geometry';
+import { describeArc, describeArcPoint, legendLayout } from '../util/geometry';
 
 const margins = {
     top: 20,
@@ -77,8 +77,10 @@ const Visualization = ({
     const occupations = data.map(getOccupation).filter((d, i, arr) => arr.indexOf(d) === i);
 
     // Scales
-    const angleScaleGroupB = scaleLinear([0, 100], [210, 330]);
-    const angleScaleGroupW = scaleLinear([0, 100], [30,150]);
+    const groupBAngleRange = [210, 330];
+    const groupWAngleRange = [30, 150];
+    const angleScaleGroupB = scaleLinear([0, 100], groupBAngleRange);
+    const angleScaleGroupW = scaleLinear([0, 100], groupWAngleRange);
     const colorScale = scaleQuantile(occupations, ['#7e6583', '#4682b4', '#00aa00', '#dc143c', '#ffc0cb', '#ffd700', '#d2b48c', '#654321', '#000000']);
 
     const circleTotalSize = min([yRange[1] - yRange[0], xRange[1] - xRange[0]]);
@@ -245,19 +247,65 @@ const Visualization = ({
              .text(d => d)
              ;
     
+    // Legends
+    const bulletRadius = 10;
+    const point1 = describeArcPoint({x: circleCenter[0], y: circleCenter[1], radius: circleRadius, startAngle: groupBAngleRange[0], endAngle: groupBAngleRange[0]});
+    const point2 = describeArcPoint({x: circleCenter[0], y: circleCenter[1], radius: circleRadius, startAngle: groupWAngleRange[0], endAngle: groupWAngleRange[0]});
+
+    const layout = legendLayout({
+        startX: point1.x,
+        startY: point1.y,
+        endX: point2.x,
+        endY: point2.y,
+        bulletSize: bulletRadius * 1,
+        verticalSpacing: 10,
+        maxItemCountPerColumn: 3
+    });
+
+    const legendPositions = occupations.reduce((acc, next, index) => {
+        acc[next] = layout(index);
+        return acc;
+    }, {});
+    console.log(legendPositions);
+            
     // Legeng colors
     container.selectAll('circle.legend-colors')
              .data(occupations)
-             .join(enter => enter.append('circle').classed('circle.legend-colors', true))
-             .attr('cx', circleCenter[0])
-             .attr('cy', (_, i) => {
-                if (i == 0) {
-                    return circleCenter[1] - circleRadius;
-                }
-                return circleCenter[1] + circleRadius;
+             .join(enter => enter.append('circle').classed('legend-colors', true))
+             .attr('cx', d => {
+                const position = legendPositions[d];
+                return position.bullet.x;
              })
-             .attr('r', 10)
+             .attr('cy', d => {
+                const position = legendPositions[d];
+                return position.bullet.y;
+             })
+             .attr('r', bulletRadius)
              ;
+
+    container.selectAll('text.legend-text')
+             .data(occupations)
+             .join(enter => enter.append('text').classed('legend-text', true))
+             .attr('x', d => {
+                const position = legendPositions[d];
+                return position.text.x;
+             })
+             .attr('y', d => {
+                const position = legendPositions[d];
+                return position.text.y;
+             })
+             .attr('text-anchor', d => {
+                const position = legendPositions[d];
+                if (position.alignment == 1) {
+                    return 'end';
+                }
+
+                return 'start';
+             })
+             .attr('font-family', 'Charter')
+             .attr('fill-opacity', 0.9)
+             .attr('font-size', 11)
+             .text(d => d);
 };
 
 const Chart = ({
