@@ -4,7 +4,7 @@ const polarToCartesian = ({
 	radius,
 	angleInDegrees
 }) => {
-	const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+	const angleInRadians = angleInDegrees * Math.PI / 180.0;
 
 	return {
 		x: centerX + (radius * Math.cos(angleInRadians)),
@@ -12,12 +12,27 @@ const polarToCartesian = ({
 	};
 }
 
+const describeArcPoint = ({
+	x,
+	y,
+	radius,
+	endAngle = 0,
+	startAngle = 0,
+}) => {
+	const midAngle = startAngle + ((endAngle - startAngle) / 2);
+
+	const point = polarToCartesian({ centerX: x, centerY: y, radius: radius, angleInDegrees: midAngle });
+
+	return point;
+}
+
 const describeArc = ({
 	x,
 	y,
 	outerRadius,
 	innerRadius,
-	angle
+	endAngle = 0,
+	startAngle = 0,
 }) => {
 	/*
 	Arc command for reference:
@@ -32,15 +47,15 @@ const describeArc = ({
 		x, y: the end point of the arc
 	*/
 
-	const outerStartPoint = polarToCartesian({ centerX: x, centerY: y, radius: outerRadius, angleInDegrees: 0 });
-	const outerEndPoint = polarToCartesian({ centerX: x, centerY: y, radius: outerRadius, angleInDegrees: angle });
+	const outerStartPoint = polarToCartesian({ centerX: x, centerY: y, radius: outerRadius, angleInDegrees: startAngle });
+	const outerEndPoint = polarToCartesian({ centerX: x, centerY: y, radius: outerRadius, angleInDegrees: endAngle });
 
-	const innerStartPoint = polarToCartesian({ centerX: x, centerY: y, radius: innerRadius, angleInDegrees: 0 });
-	const innerEndPoint = polarToCartesian({ centerX: x, centerY: y, radius: innerRadius, angleInDegrees: angle });
+	const innerStartPoint = polarToCartesian({ centerX: x, centerY: y, radius: innerRadius, angleInDegrees: startAngle });
+	const innerEndPoint = polarToCartesian({ centerX: x, centerY: y, radius: innerRadius, angleInDegrees: endAngle });
 
-	const largeArcFlag = angle > 180 ? 1 : 0;
+	const largeArcFlag = endAngle - startAngle > 180 ? 1 : 0;
 
-	let d = [
+	const d = [
 		// Move to start point
 		`M ${outerStartPoint.x}, ${outerStartPoint.y}`,
 		// Draw the outer arc
@@ -249,4 +264,81 @@ const connectorPath = ({
 	return points.join('' );
 }
 
-export { describeArc, polarToCartesian, snakePath, connectorPath };
+/*
+	Positions the elements in the grid with the bullet aligned to either left 
+	or right
+*/
+const legend2ColumnLayout = ({
+	itemCount,
+	startX, 
+	startY,
+	endX, 
+	endY,
+	bulletSize = 10,
+	verticalPadding = 10,
+	horizontalSpacing = 10
+}) => {
+
+	// First calculate how many items we can fit on the right side
+	const verticalSpace = endY - startY - (verticalPadding * 2);
+
+	// Calculate how many items we can fit per column
+	const rightColumnItemCount = Math.ceil(itemCount / 2);
+	const leftColumnItemCount = itemCount - rightColumnItemCount;
+
+	// Calculate the spacing between each item in each column
+	const rightColumnFreeSpacing = verticalSpace - (rightColumnItemCount * bulletSize);
+	const rightColumnItemSpacing = rightColumnFreeSpacing >= 10 ? rightColumnFreeSpacing / (rightColumnItemCount + 1) : 10;
+
+	const leftColumnFreeSpacing = verticalSpace - (leftColumnItemCount * bulletSize);
+	const leftColumnItemSpacing = leftColumnFreeSpacing >= 10 ? leftColumnFreeSpacing / (leftColumnItemCount + 1) : 10;
+
+	// 1 for right column, -1 for left column
+	const findColumn = itemIndex => itemIndex < rightColumnItemCount ? 1 : -1;
+
+	const findRowYPosition = itemIndex => {
+		const column = findColumn(itemIndex);
+		const rowIndex = column === 1 ? itemIndex : itemIndex - rightColumnItemCount;
+		const spacing = column === 1 ? rightColumnItemSpacing : leftColumnItemSpacing;
+
+		return startY + verticalPadding + (rowIndex + 1) * (bulletSize + spacing);
+	}
+	
+	// Return the position of bullet and text for the given item index
+	return (itemIndex) => {
+		const column = findColumn(itemIndex);
+		const yPosition = findRowYPosition(itemIndex);
+		let bulletPosition;
+		let textPosition;
+		let alignment; // 1 for right, -1 for left
+
+		if (column == 1) {
+			// Right column, bullet is on the right and text is on the left of the bullet
+			bulletPosition = { x: endX, y: yPosition };
+
+			textPosition = { x: endX - bulletSize - horizontalSpacing, y: yPosition };
+			alignment = 1;
+
+		} else {
+			// Left column
+			bulletPosition = { x: startX, y: yPosition };
+			textPosition = { x: startX + bulletSize + horizontalSpacing, y: yPosition };
+			alignment = -1;
+		}
+
+		return {
+			bullet: bulletPosition,
+			text: textPosition,
+			alignment: alignment
+		}
+	}
+};
+
+export { 
+	describeArc, 
+	polarToCartesian, 
+	snakePath, 
+	connectorPath, 
+	describeArcPoint,
+	legend2ColumnLayout
+};
