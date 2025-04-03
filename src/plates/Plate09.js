@@ -1,12 +1,9 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { 
     scaleLinear, 
-    line, 
-    extent, 
     select,
-    scaleQuantile,
-    min,
-    format
+    scaleOrdinal,
+    min
 } from 'd3';
 import { getSource08, getSource09 } from '../util/data';
 import Background from '../components/Background';
@@ -20,7 +17,7 @@ const margins = {
     right: 20
 }
 
-const titleText = "WIP Visualization";
+const titleText = "Occupations of Blacks and Whites in Georgia";
 
 const TitleTextStyle = {
     font: "1.2em 'B52-ULC W00 ULC'"
@@ -60,14 +57,19 @@ const Visualization = ({
 }) => {
     if (data.length == 0) return;
 
-    const labelPointCache = {};
+    // Make sure we add the index of the data directly
+    data.forEach((d, i) => {
+        d.index = i;
+    });
+
+    const labelPointCache = { b: {}, w: {}};
 
     // Getters
     const getGroup = d => d.group;
     const getPercentage = d => d.percentage;
     const getOccupation = d => d.occupation;
-    const groupB = data.filter(d => getGroup(d) === 'b');
-    const groupW = data.filter(d => getGroup(d) === 'w');
+    const groupB = data.filter(d => getGroup(d) === 'b').sort((a, b) => getPercentage(a) - getPercentage(b)).reverse();
+    const groupW = data.filter(d => getGroup(d) === 'w').sort((a, b) => getPercentage(a) - getPercentage(b)).reverse();
     const groupBAcc = groupB.map(getPercentage).map(mapAccumulator());
     const groupWAcc = groupW.map(getPercentage).map(mapAccumulator());
 
@@ -81,7 +83,8 @@ const Visualization = ({
     const groupWAngleRange = [30, 150];
     const angleScaleGroupB = scaleLinear([0, 100], groupBAngleRange);
     const angleScaleGroupW = scaleLinear([0, 100], groupWAngleRange);
-    const colorScale = scaleQuantile(occupations, ['#7e6583', '#4682b4', '#00aa00', '#dc143c', '#ffc0cb', '#ffd700', '#d2b48c', '#654321', '#000000']);
+    // Red, yellow, blue, grey, brown
+    const colorScale = scaleOrdinal(occupations, ['#dc143c', '#4682b4', '#ffd700', '#654321', '#d2b48c', '#7e6583' , '#00aa00', '#ffc0cb' , '#654321', '#000000']);
 
     const circleTotalSize = min([yRange[1] - yRange[0], xRange[1] - xRange[0]]) - 32;
     const circleRadius = circleTotalSize / 2;
@@ -138,18 +141,33 @@ const Visualization = ({
         return path;
     }
 
-    const pointForPath = (d, i) => {
-        if (labelPointCache[i]) {
-            return labelPointCache[i];
+    const pointForPathGroupB = (d, i) => {
+        if (labelPointCache.b[i]) {
+            return labelPointCache.b[i];
         }
 
-        const group = getGroup(d);
-        let angles;
-        if (group === 'b') {
-            angles = groupBAngles(d, i);
-        } else {
-            angles = groupWAngles(d, i - groupB.length);
+        const angles = groupBAngles(d, i);
+        const [startAngle, endAngle] = angles;
+
+        const point = describeArcPoint({
+            x: circleCenter[0],
+            y: circleCenter[1],
+            radius: circleRadius + 8,
+            startAngle: startAngle,
+            endAngle: endAngle
+        });
+
+        labelPointCache.b[i] = point;
+
+        return point;
+    }
+
+    const pointForPathGroupW = (d, i) => {
+        if (labelPointCache.w[i]) {
+            return labelPointCache.w[i];
         }
+
+        const angles = groupWAngles(d, i);
 
         const [startAngle, endAngle] = angles;
 
@@ -161,7 +179,7 @@ const Visualization = ({
             endAngle: endAngle
         });
 
-        labelPointCache[i] = point;
+        labelPointCache.w[i] = point;
 
         return point;
     }
@@ -175,11 +193,17 @@ const Visualization = ({
                                      .attr('transform', `translate(${0}, ${0})`);
     
     // First group
-    container.selectAll('path.mark-group-b')
+    container.selectAll('path.mark-group-b-background')
              .data(groupB)
-             .join(enter => enter.append('path').classed('mark-group-b', true))
+             .join(enter => enter.append('path').classed('mark-group-b-background', true))
              .attr('d', groupBPathGenerator)
-             .attr('stroke', 'black')
+             .attr('filter', 'url(#filter-g9odhc_gqf-2)');
+
+    container.selectAll('path.mark-group-b-foreground')
+             .data(groupB)
+             .join(enter => enter.append('path').classed('mark-group-b-foreground', true))
+             .attr('d', groupBPathGenerator)
+             .attr('stroke', '#654321')
              .attr('fill', (d) => {
                 return colorScale(getOccupation(d));
              })
@@ -188,11 +212,17 @@ const Visualization = ({
              .attr('fill-opacity', 0.65);
 
     // Second group
-    container.selectAll('path.mark-group-w')
+    container.selectAll('path.mark-group-w-background')
              .data(groupW)
-             .join(enter => enter.append('path').classed('mark-group-w', true))
+             .join(enter => enter.append('path').classed('mark-group-w-background', true))
              .attr('d', groupWPathGenerator)
-             .attr('stroke', 'black')
+             .attr('filter', 'url(#filter-g9odhc_gqf-2)');
+
+    container.selectAll('path.mark-group-w-foreground')
+             .data(groupW)
+             .join(enter => enter.append('path').classed('mark-group-w-foreground', true))
+             .attr('d', groupWPathGenerator)
+             .attr('stroke', '#654321')
              .attr('fill', (d) => {
                 return colorScale(getOccupation(d));
              })
@@ -201,19 +231,47 @@ const Visualization = ({
              .attr('fill-opacity', 0.65);
 
     // Labels for values
-    container.selectAll('text.value-label')
-             .data(data)
-             .join(enter => enter.append('text').classed('value-label', true))
+    container.selectAll('text.value-label-group-b')
+             .data(groupB)
+             .join(enter => enter.append('text').classed('value-label-group-b', true))
              .attr('x', (d, i) => {
-                const point = pointForPath(d, i);
+                const point = pointForPathGroupB(d, i);
                 return point.x;
              })
              .attr('y', (d, i) => {
-                const point = pointForPath(d, i);
+                const point = pointForPathGroupB(d, i);
                 return point.y;
              })
              .attr('text-anchor', (d, i) => {
-                const point = pointForPath(d, i);
+                const point = pointForPathGroupB(d, i);
+                if (point.x >= circleCenter[0]) {
+                    return 'start';
+                }
+                return 'end';
+             })
+             .attr('alignment-baseline', 'middle')
+             .attr('font-family', 'Charter')
+             .attr('font-weight', 'bold')
+             .attr('fill-opacity', 0.9)
+             .attr('font-size', 11)
+             .text(d => {
+                return `${getPercentage(d)}%`;
+             })
+             ;
+
+    container.selectAll('text.value-label-group-w')
+             .data(groupW)
+             .join(enter => enter.append('text').classed('value-label-group-w', true))
+             .attr('x', (d, i) => {
+                const point = pointForPathGroupW(d, i);
+                return point.x;
+             })
+             .attr('y', (d, i) => {
+                const point = pointForPathGroupW(d, i);
+                return point.y;
+             })
+             .attr('text-anchor', (d, i) => {
+                const point = pointForPathGroupW(d, i);
                 if (point.x >= circleCenter[0]) {
                     return 'start';
                 }
@@ -236,9 +294,9 @@ const Visualization = ({
              .attr('x', circleCenter[0])
              .attr('y', (_, i) => {
                 if (i == 0) {
-                    return circleCenter[1] - circleRadius - 12;
+                    return circleCenter[1] - circleRadius - 8;
                 }
-                return circleCenter[1] + circleRadius + 12;
+                return circleCenter[1] + circleRadius + 8;
              })
              .attr('text-anchor', 'middle')
              .attr('font-family', 'Charter')
@@ -269,6 +327,7 @@ const Visualization = ({
         verticalPadding: 60,
     });
 
+    // Cache the positions
     const legendPositions = occupations.reduce((acc, next, index) => {
         acc[next] = layout(index);
         return acc;
@@ -286,7 +345,7 @@ const Visualization = ({
                 const position = legendPositions[d];
                 return position.bullet.y;
              })
-             .attr('r', bulletRadius)
+             .attr('filter', 'url(#filter-g9odhc_gqf-2)')
              ;
 
     container.selectAll('circle.legend-colors-foreground')
@@ -301,6 +360,13 @@ const Visualization = ({
                 return position.bullet.y;
              })
              .attr('r', bulletRadius)
+             .attr('stroke', '#654321')
+             .attr('fill', (d) => {
+                return colorScale(d);
+             })
+             .attr('stroke-width', 1)
+             .attr('stroke-opacity', 0.9)
+             .attr('fill-opacity', 0.65)
              ;
 
     container.selectAll('text.legend-text')
