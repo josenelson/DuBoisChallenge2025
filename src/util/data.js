@@ -111,6 +111,28 @@ const getSource09 = async function() {
     return transformedData;
 }
 
+const getSource10 = async function() {
+    const data = await csv("/data10.csv");
+    
+    /*
+    Class,Actual Average,Rent,Food,Clothes,Tax,Other
+$100-200,139.10,19,43,28,9.9,0
+*/
+
+    const transformedData = data.map(d => {
+        return {
+            income_class: d['Class'],
+            actual_average: d['Actual Average'] * 1,
+            rent: d['Rent'] * 1,
+            food: d['Food'] * 1,
+            clothes: d['Clothes'] * 1,
+            other: d['Other'] * 1
+        }
+    });
+
+    return transformedData;
+}
+
 export { 
     getSource01, 
     getSource02, 
@@ -120,5 +142,6 @@ export {
     getSource04,
     getSource07,
     getSource08,
-    getSource09
+    getSource09,
+    getSource10
 };
