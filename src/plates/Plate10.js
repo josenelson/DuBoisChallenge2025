@@ -47,6 +47,8 @@ const getYRange = (size) => {
     return [topMargin, size.height - (margins.bottom)];
 }
 
+const categoryOrder = ['rent', 'food', 'clothes', 'other'];
+
 const Visualization = ({
     element, 
     size,
@@ -57,14 +59,12 @@ const Visualization = ({
     // Getters
     const getClass = d => d.income_class;
     const getAverage = d => d.actual_average;
-    const getRent = d => d.rent;
-    const getFood = d => d.food;
-    const getClothes = d => d.clothes;
-    const getOther = d => d.other;
+    const getCategories = d => d.categories;
     
     // Add the index to all the items
-    data.forEach((d, i) => {
+    data = data.map((d, i) => {
         d.index = i;
+        return d;
     });
 
     // Ranges
@@ -89,11 +89,18 @@ const Visualization = ({
                                    .join(enter => {
                                         const innerContainer = enter.append('g').classed('mark-container', true);
             
+                                        innerContainer.append('g.mark').classed('mark', true);
+
                                         innerContainer.append('text').classed('label1', true);
                                         innerContainer.append('text').classed('label2', true);
                                     
                                         return innerContainer;
                                    });
+
+    markContainer.selectAll('g.mark')
+                 .selectAll('rect.mark-background')
+                 .data(getCategories)
+                 .join(enter => enter.append('rect').classed('mark-background', true))
 
     /*
 

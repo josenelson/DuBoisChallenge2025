@@ -123,10 +123,12 @@ $100-200,139.10,19,43,28,9.9,0
         return {
             income_class: d['Class'],
             actual_average: d['Actual Average'] * 1,
-            rent: d['Rent'] * 1,
-            food: d['Food'] * 1,
-            clothes: d['Clothes'] * 1,
-            other: d['Other'] * 1
+            categories: [{
+                name: 'rent', value: d['Rent'] * 1,
+                name: 'food', value: d['Food'] * 1,
+                name: 'clothes', value: d['Clothes'] * 1,
+                name: 'other', value: d['Other'] * 1,
+            }]
         }
     });
 
