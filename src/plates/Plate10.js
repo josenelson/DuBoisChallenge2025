@@ -67,6 +67,28 @@ const Visualization = ({
         return d;
     });
 
+    // Add the categories as an array and the accumulated value
+    data = data.map((d, i) => {
+        let accumulated = 0;
+
+        d.categories = categoryOrder.map(category => {
+            const cat = {
+                name: category,
+                value: d[category],
+                original_index: i,
+                acc: accumulated
+            };
+
+            accumulated += cat.value;
+
+            return cat;
+        });
+
+        return d;
+    });
+
+    console.log(data);
+
     // Ranges
     const yRange = getYRange(size);
     const xRange = getXRange(size);
