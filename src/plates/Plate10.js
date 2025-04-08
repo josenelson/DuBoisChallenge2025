@@ -28,7 +28,7 @@ const TitleTextStyle = {
 
 const labelsSize = 165;
 
-const barSize = 12;
+const barSize = 24;
 
 const getXRange = (size) => {
     const leftMargin = margins.left;
@@ -47,7 +47,7 @@ const getYRange = (size) => {
     return [topMargin, size.height - (margins.bottom)];
 }
 
-const categoryOrder = ['rent', 'food', 'clothes', 'other'];
+const categoryOrder = ['rent', 'food', 'clothes', 'tax', 'other'];
 
 const Visualization = ({
     element, 
@@ -87,8 +87,6 @@ const Visualization = ({
         return d;
     });
 
-    console.log(data);
-
     // Ranges
     const yRange = getYRange(size);
     const xRange = getXRange(size);
@@ -97,6 +95,22 @@ const Visualization = ({
     // Scales
     const xScale = scaleLinear([0, 100], [0, maxBarWidth]);
     const yScale = scaleLinear([0, data.length], yRange);
+
+    // Helper functions for positions
+    const getBarXPosition = d => {
+        const acc = d.acc;
+        return xScale(acc) + labelsSize;
+    }
+
+    const getBarYPosition = d => {
+        const originalIndex = d.original_index;
+        return yScale(originalIndex);
+    }
+
+    const getBarWidth = d => {
+        const value = d.value;
+        return xScale(value);
+    }
     
     // Selections
     const parentSelection = select(element);
@@ -111,7 +125,7 @@ const Visualization = ({
                                    .join(enter => {
                                         const innerContainer = enter.append('g').classed('mark-container', true);
             
-                                        innerContainer.append('g.mark').classed('mark', true);
+                                        innerContainer.append('g').classed('mark', true);
 
                                         innerContainer.append('text').classed('label1', true);
                                         innerContainer.append('text').classed('label2', true);
@@ -119,10 +133,32 @@ const Visualization = ({
                                         return innerContainer;
                                    });
 
+    
     markContainer.selectAll('g.mark')
                  .selectAll('rect.mark-background')
                  .data(getCategories)
                  .join(enter => enter.append('rect').classed('mark-background', true))
+                 .attr('y', getBarYPosition)
+                 .attr('x', getBarXPosition)
+                 .attr('width', getBarWidth)
+                 .attr('height', barSize)
+                 .attr('filter', 'url(#filter-g9odhc_gqf-2)')
+                 ;
+
+    markContainer.selectAll('g.mark')
+                 .selectAll('rect.mark-foreground')
+                 .data(getCategories)
+                 .join(enter => enter.append('rect').classed('mark-foreground', true))
+                 .attr('y', getBarYPosition)
+                 .attr('x', getBarXPosition)
+                 .attr('width', getBarWidth)
+                 .attr('height', barSize)
+                 .attr('fill', '#DC143C')
+                 .attr('fill-opacity', '0.4')
+                 .attr('stroke', '#654321')
+                 .attr('stroke-opacity', '0.2')
+                 .attr('stroke-width', 2)
+                 ;
 
     /*
 

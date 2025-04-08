@@ -121,7 +121,8 @@ const getSource10 = async function() {
             rent: d['Rent'] * 1,
             food:  d['Food'] * 1,
             clothes: d['Clothes'] * 1,
-            other: d['Other'] * 1
+            other: d['Other'] * 1,
+            tax: d['Tax'] * 1
         }
     });
 
