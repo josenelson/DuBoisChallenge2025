@@ -1,20 +1,16 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { 
-    scaleLinear, 
-    line, 
-    extent, 
+    scaleLinear,
     select,
-    scaleQuantile,
-    min,
-    format
+    scaleOrdinal
 } from 'd3';
 import { getSource10 } from '../util/data';
 import Background from '../components/Background';
-import { ensureElement, layoutContainersVertically, layoutContainersVerticallyWithAggregation } from '../util/d3util';
 import { connectorPath, snakePath } from '../util/geometry';
+import { ensureElement } from '../util/d3util';
 
 const margins = {
-    top: 20,
+    top: 10,
     bottom: 20, 
     left: 20,
     right: 20
@@ -48,6 +44,8 @@ const getYRange = (size) => {
 }
 
 const categoryOrder = ['rent', 'food', 'clothes', 'tax', 'other'];
+
+const axisLabelsSize = 40;
 
 const Visualization = ({
     element, 
@@ -94,7 +92,8 @@ const Visualization = ({
 
     // Scales
     const xScale = scaleLinear([0, 100], [0, maxBarWidth]);
-    const yScale = scaleLinear([0, data.length], yRange);
+    const yScale = scaleLinear([0, data.length], [yRange[0] + axisLabelsSize, yRange[1]]);
+    const colorScale = scaleOrdinal(categoryOrder, ['#dc143c', '#4682b4', '#ffd700', '#654321', '#d2b48c', '#7e6583' , '#00aa00', '#ffc0cb' , '#654321', '#000000']);
 
     // Helper functions for positions
     const getBarXPosition = d => {
@@ -133,7 +132,13 @@ const Visualization = ({
                                         return innerContainer;
                                    });
 
-    
+
+    const axisContainer = ensureElement({
+        parent: container,
+        elementType: 'g',
+        className: 'axis-container'
+    });
+
     markContainer.selectAll('g.mark')
                  .selectAll('rect.mark-background')
                  .data(getCategories)
@@ -153,32 +158,14 @@ const Visualization = ({
                  .attr('x', getBarXPosition)
                  .attr('width', getBarWidth)
                  .attr('height', barSize)
-                 .attr('fill', '#DC143C')
+                 .attr('fill', (_, i) => colorScale(i))
                  .attr('fill-opacity', '0.4')
                  .attr('stroke', '#654321')
                  .attr('stroke-opacity', '0.2')
                  .attr('stroke-width', 2)
                  ;
 
-    /*
-
-    markContainer.select('path.mark-background')
-                 .attr('d', pathGenerator)
-                 .attr('filter', 'url(#filter-g9odhc_gqf-2)')
-                 ;
-
-    markContainer.select('path.mark-foreground')
-                 .attr('d', pathGenerator)
-                 .attr('fill', '#DC143C')
-                 .attr('fill-opacity', '0.4')
-                 .attr('stroke', '#654321')
-                 .attr('stroke-opacity', '0.2')
-                 .attr('stroke-width', 2)
-                 .attr('data-aggregated', d => d.isAggregated ? 1 : 0)
-                 .attr('data-should-aggregate', d => count(d) <= aggregateThreshold ? 1 : 0)
-                 ;
-    */
-
+    // Vertical labels selection
     markContainer.select('text.label1')
                  .attr('x', 40)
                  .attr('y', (_, i) => yScale(i) + barSize / 2)
@@ -203,6 +190,53 @@ const Visualization = ({
                  .attr('font-weight', 'bold')
                  .attr('dx', -5)
                 ;
+
+    // Axis selection
+    const getXAxisMarkPosition = (_, i) => {
+        return xScale(i * (100/categoryOrder.length)) + labelsSize;
+    }
+
+    const getXAxisTextMarkPosition = (_, i) => {
+        return xScale(i * (100/categoryOrder.length)) + labelsSize + (xScale(100/categoryOrder.length) / 2);
+    }
+
+    axisContainer.selectAll('rect.axis-mark-background')
+                 .data(categoryOrder)
+                 .join(enter => enter.append('rect').classed('axis-mark-background', true))
+                 .attr('y', axisLabelsSize)
+                 .attr('x', getXAxisMarkPosition)
+                 .attr('width', xScale(100/categoryOrder.length))
+                 .attr('height', barSize)
+                 .attr('filter', 'url(#filter-g9odhc_gqf-2)')
+                 ;
+
+    axisContainer.selectAll('rect.axis-mark-foreground')
+                 .data(categoryOrder)
+                 .join(enter => enter.append('rect').classed('axis-mark-foreground', true))
+                 .attr('y', axisLabelsSize)
+                 .attr('x', getXAxisMarkPosition)
+                 .attr('width', xScale(100/categoryOrder.length))
+                 .attr('height', barSize)
+                 .attr('fill', (_, i) => colorScale(i))
+                 .attr('fill-opacity', '0.4')
+                 .attr('stroke', '#654321')
+                 .attr('stroke-opacity', '0.2')
+                 .attr('stroke-width', 2)
+                 ;
+
+    axisContainer.selectAll('text.axis-mark-text')
+                 .data(categoryOrder)
+                 .join(enter => enter.append('text').classed('axis-mark-text', true))
+                 .attr('y', 12)
+                 .attr('x', getXAxisTextMarkPosition)
+                 .attr('text-anchor', 'middle')
+                 .attr('alignment-baseline', 'middle')
+                 .attr('font-family', 'Charter')
+                 .attr('fill-opacity', 0.9)
+                 .attr('font-size', 14)
+                 .attr('dx', -5)
+                 .text(d => `${d.toUpperCase()}`)
+                 ;
 };
 
 const Chart = ({
