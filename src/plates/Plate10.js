@@ -187,7 +187,6 @@ const Visualization = ({
         let sourceX = 0;
         let sourceY = 0;
 
-        // TODO: need to ajust the Y by the bar amount ?
         if (original_index > 0) {
             const categories = data[original_index - 1].categories;
             const previousPoint = categories.find(value => value.name === name);
@@ -253,6 +252,34 @@ const Visualization = ({
                  })
                  .attr('stroke-width', 2)
                  ;
+
+    // Bar labels
+    markContainer.selectAll('g.mark')
+                 .selectAll('text.mark-label')
+                 .data(getCategories)
+                 .join(enter => enter.append('text').classed('mark-label', true))
+                 .attr('x', (d, i) => {
+                    const position = getBarXPosition(d, i);
+                    const width = getBarWidth(d, i);
+                    return position + (width / 2);
+                 })
+                 .attr('y', (d, i) => {
+                    const position = getBarYPosition(d, i);
+                    const height = barSize;
+                    return position + (height / 2);
+                 })
+                 .attr('text-anchor', 'middle')
+                 .attr('alignment-baseline', 'middle')
+                 .attr('font-family', 'Charter')
+                 .attr('fill-opacity', (d, i) => {
+                    const width = getBarWidth(d, i);
+                    if (width < 10) return 0;
+                    return 0.9;
+                 })
+                 .attr('font-size', 14)
+                 .attr('font-weight', 'bold')
+                 .text(d => `${d.value}%`)
+
 
     // Vertical labels selection
     markContainer.select('text.label1')
