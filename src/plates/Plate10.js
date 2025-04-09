@@ -110,6 +110,15 @@ const Visualization = ({
         const value = d.value;
         return xScale(value);
     }
+
+    const getXAxisMarkPosition = (_, i) => {
+        return xScale(i * (100/categoryOrder.length)) + labelsSize;
+    }
+
+    const getXAxisTextMarkPosition = (_, i) => {
+        return xScale(i * (100/categoryOrder.length)) + labelsSize + (xScale(100/categoryOrder.length) / 2);
+    }
+    
     
     // Selections
     const parentSelection = select(element);
@@ -165,6 +174,86 @@ const Visualization = ({
                  .attr('stroke-width', 2)
                  ;
 
+    // Mark connectors
+    const connectorCaches = {};
+    const getConnectorPosition = (d, i) => {
+        const { original_index, name } = d;
+        const cacheKey = `${i}_${original_index}`;
+
+        if (connectorCaches[cacheKey]) {
+            return connectorCaches[cacheKey];
+        }
+
+        let sourceX = 0;
+        let sourceY = 0;
+
+        // TODO: need to ajust the Y by the bar amount ?
+        if (original_index > 0) {
+            const categories = data[original_index - 1].categories;
+            const previousPoint = categories.find(value => value.name === name);
+
+            sourceX = getBarXPosition(previousPoint) + getBarWidth(previousPoint);
+            sourceY = getBarYPosition(previousPoint) + barSize;
+
+        } else {
+            sourceX = getXAxisMarkPosition(d, i) + xScale(100/categoryOrder.length);
+            sourceY = axisLabelsSize + barSize;
+        }
+
+        const targetX = getBarXPosition(d) + getBarWidth(d);
+        const targetY = getBarYPosition(d);
+
+        const ret = {
+            x1: sourceX,
+            x2: targetX,
+            y1: sourceY,
+            y2: targetY
+        };
+
+        connectorCaches[cacheKey] = ret;
+
+        return ret;
+    }
+    
+    markContainer.selectAll('g.mark')
+                 .selectAll('line.mark-connector-left')
+                 .data(getCategories)
+                 .join(enter => enter.append('line').classed('mark-connector-left', true))
+                 .attr('x1', (d, i) => {
+                    const position = getConnectorPosition(d, i);
+                    return position.x1;
+                 })
+                 .attr('y1', (d, i) => {
+                    const position = getConnectorPosition(d, i);
+                    return position.y1;
+                 })
+                 .attr('x2', (d, i) => {
+                    const position = getConnectorPosition(d, i);
+                    return position.x2;
+                 })
+                 .attr('y2', (d, i) => {
+                    const position = getConnectorPosition(d, i);
+                    return position.y2;
+                 })
+                 .attr('stroke', '#654321')
+                 .attr('stroke-opacity', (d, i) => {
+                    // Hide is the source and target are one of the edges
+                    const position = getConnectorPosition(d, i);
+                    const xScaleRange = xScale.range();
+                    if (
+                        (Math.abs(position.x1 - (xScaleRange[0] + labelsSize)) < 15 || 
+                         Math.abs(position.x1 - (xScaleRange[1] + labelsSize)) < 15) &&
+                        (Math.abs(position.x2 - (xScaleRange[0] + labelsSize)) < 15 || 
+                         Math.abs(position.x2 - (xScaleRange[1] + labelsSize)) < 15)
+                    ) {
+                        return 0;
+                    }
+
+                    return 0.2;
+                 })
+                 .attr('stroke-width', 2)
+                 ;
+
     // Vertical labels selection
     markContainer.select('text.label1')
                  .attr('x', 40)
@@ -192,14 +281,6 @@ const Visualization = ({
                 ;
 
     // Axis selection
-    const getXAxisMarkPosition = (_, i) => {
-        return xScale(i * (100/categoryOrder.length)) + labelsSize;
-    }
-
-    const getXAxisTextMarkPosition = (_, i) => {
-        return xScale(i * (100/categoryOrder.length)) + labelsSize + (xScale(100/categoryOrder.length) / 2);
-    }
-
     axisContainer.selectAll('rect.axis-mark-background')
                  .data(categoryOrder)
                  .join(enter => enter.append('rect').classed('axis-mark-background', true))
