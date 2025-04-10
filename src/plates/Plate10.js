@@ -298,7 +298,7 @@ const Visualization = ({
 
     // Vertical labels selection
     markContainer.select('text.label1')
-                 .attr('x', 40)
+                 .attr('x', 0)
                  .attr('y', (_, i) => yScale(i) + calculatedBarSize / 2)
                  .text(getClass)
                  .attr('text-anchor', 'start')
@@ -306,7 +306,6 @@ const Visualization = ({
                  .attr('font-family', 'Charter')
                  .attr('fill-opacity', 0.9)
                  .attr('font-size', 12)
-                 .attr('dx', -5)
                  ;
 
     markContainer.select('text.label2')
@@ -319,7 +318,6 @@ const Visualization = ({
                  .attr('fill-opacity', 0.9)
                  .attr('font-size', 12)
                  .attr('font-weight', 'bold')
-                 .attr('dx', -5)
                 ;
 
     // Axis selection
@@ -359,6 +357,25 @@ const Visualization = ({
                  .attr('font-size', 14)
                  .attr('dx', -5)
                  .text(d => `${d.toUpperCase()}`)
+                 ;
+
+    // Vertical labels headers
+    axisContainer.selectAll('text.label-header')
+                 .data(['Class', 'Actual Average'])
+                 .join(enter => enter.append('text').classed('label-header', true))
+                 .attr('x', (_, i) => {
+                    if (i === 0) return 0;
+                    return labelsSize - 10;
+                 })
+                 .attr('y', yScale.range()[0])
+                 .text(d => d)
+                 .attr('text-anchor', (_, i) => i === 0 ? 'start' : 'end')
+                 .attr('alignment-baseline', 'middle')
+                 .attr('font-family', 'Charter')
+                 .attr('fill-opacity', 0.9)
+                 .attr('font-size', 12)
+                 .attr('font-weight', (_, i) => i === 0 ? '' : 'bold')
+                 .attr('dy', '-1em')
                  ;
 
     // Class groups
