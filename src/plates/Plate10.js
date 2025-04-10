@@ -6,7 +6,7 @@ import {
 } from 'd3';
 import { getSource10 } from '../util/data';
 import Background from '../components/Background';
-import { connectorPath, snakePath } from '../util/geometry';
+import { rightArrow} from '../util/geometry';
 import { ensureElement } from '../util/d3util';
 
 const margins = {
@@ -23,6 +23,8 @@ const TitleTextStyle = {
 }
 
 const labelsSize = 165;
+
+const rightLabelsSize = 50;
 
 const barSize = 24;
 
@@ -44,6 +46,13 @@ const getYRange = (size) => {
 }
 
 const categoryOrder = ['rent', 'food', 'clothes', 'tax', 'other'];
+
+const classGroups = [
+    {name: 'Poor', from: 0, to: 250},
+    {name: 'Fair', from: 250, to: 500},
+    {name: 'Comfortable', from: 500, to: 1000},
+    {name: 'Well-Todo', from: 1000, to: 1000000}
+];
 
 const axisLabelsSize = 40;
 
@@ -88,12 +97,19 @@ const Visualization = ({
     // Ranges
     const yRange = getYRange(size);
     const xRange = getXRange(size);
-    const maxBarWidth = xRange[1] - xRange[0] - labelsSize;
+    const maxBarWidth = xRange[1] - xRange[0] - labelsSize - rightLabelsSize;
+    const classGroupRanges = classGroups.map(d => {
+        return {
+            ...d,
+            values: data.filter(value => value.actual_average >= d.from && value.actual_average < d.to)
+        };
+    });
 
     // Scales
     const xScale = scaleLinear([0, 100], [0, maxBarWidth]);
     const yScale = scaleLinear([0, data.length], [yRange[0] + axisLabelsSize, yRange[1]]);
     const colorScale = scaleOrdinal(categoryOrder, ['#dc143c', '#4682b4', '#ffd700', '#654321', '#d2b48c', '#7e6583' , '#00aa00', '#ffc0cb' , '#654321', '#000000']);
+    const calculatedBarSize = barSize * 2;
 
     // Helper functions for positions
     const getBarXPosition = d => {
@@ -118,7 +134,6 @@ const Visualization = ({
     const getXAxisTextMarkPosition = (_, i) => {
         return xScale(i * (100/categoryOrder.length)) + labelsSize + (xScale(100/categoryOrder.length) / 2);
     }
-    
     
     // Selections
     const parentSelection = select(element);
@@ -155,7 +170,7 @@ const Visualization = ({
                  .attr('y', getBarYPosition)
                  .attr('x', getBarXPosition)
                  .attr('width', getBarWidth)
-                 .attr('height', barSize)
+                 .attr('height', calculatedBarSize)
                  .attr('filter', 'url(#filter-g9odhc_gqf-2)')
                  ;
 
@@ -166,7 +181,7 @@ const Visualization = ({
                  .attr('y', getBarYPosition)
                  .attr('x', getBarXPosition)
                  .attr('width', getBarWidth)
-                 .attr('height', barSize)
+                 .attr('height', calculatedBarSize)
                  .attr('fill', (_, i) => colorScale(i))
                  .attr('fill-opacity', '0.4')
                  .attr('stroke', '#654321')
@@ -192,7 +207,7 @@ const Visualization = ({
             const previousPoint = categories.find(value => value.name === name);
 
             sourceX = getBarXPosition(previousPoint) + getBarWidth(previousPoint);
-            sourceY = getBarYPosition(previousPoint) + barSize;
+            sourceY = getBarYPosition(previousPoint) + calculatedBarSize;
 
         } else {
             sourceX = getXAxisMarkPosition(d, i) + xScale(100/categoryOrder.length);
@@ -265,7 +280,7 @@ const Visualization = ({
                  })
                  .attr('y', (d, i) => {
                     const position = getBarYPosition(d, i);
-                    const height = barSize;
+                    const height = calculatedBarSize;
                     return position + (height / 2);
                  })
                  .attr('text-anchor', 'middle')
@@ -284,7 +299,7 @@ const Visualization = ({
     // Vertical labels selection
     markContainer.select('text.label1')
                  .attr('x', 40)
-                 .attr('y', (_, i) => yScale(i) + barSize / 2)
+                 .attr('y', (_, i) => yScale(i) + calculatedBarSize / 2)
                  .text(getClass)
                  .attr('text-anchor', 'start')
                  .attr('alignment-baseline', 'middle')
@@ -296,7 +311,7 @@ const Visualization = ({
 
     markContainer.select('text.label2')
                  .attr('x', labelsSize - 10)
-                 .attr('y', (_, i) => yScale(i) + barSize / 2)
+                 .attr('y', (_, i) => yScale(i) + calculatedBarSize / 2)
                  .text(d => `$${getAverage(d)}`)
                  .attr('text-anchor', 'end')
                  .attr('alignment-baseline', 'middle')
@@ -344,6 +359,61 @@ const Visualization = ({
                  .attr('font-size', 14)
                  .attr('dx', -5)
                  .text(d => `${d.toUpperCase()}`)
+                 ;
+
+    // Class groups
+    const classGroupPositionCache = {};
+    const positionForClassGroup = (group, index) => {
+        if (classGroupPositionCache[index]) return classGroupPositionCache[index];
+
+        const classGroup = classGroupRanges.find(d => d.name === group.name);
+
+        const fromDataPoint = classGroup.values[0];
+        const toDataPoint = classGroup.values[classGroup.values.length - 1];
+
+        const ret = {
+            y1: yScale(fromDataPoint.index),
+            y2:  yScale(toDataPoint.index) + calculatedBarSize,
+        };
+
+        classGroupPositionCache[index] = ret;
+
+        return ret;
+    }
+
+    axisContainer.selectAll('text.axis-class-group-text')
+                 .data(classGroups)
+                 .join(enter => enter.append('text').classed('axis-class-group-text', true))
+                 .attr('text-anchor', 'middle')
+                 .attr('alignment-baseline', 'middle')
+                 .attr('font-family', 'Charter')
+                 .attr('fill', '#654321')
+                 .attr('fill-opacity', 0.9)
+                 .attr('font-size', 12)
+                 .attr('transform', (d, i) => {
+                    const position = positionForClassGroup(d, i);
+                    const y = position.y1 + ((position.y2 - position.y1) / 2);
+                    const x = xScale.range()[1] + labelsSize + rightLabelsSize - 12;
+
+                    return `translate(${x}, ${y}) rotate(-90)`;
+                 })
+                 .text(d => `${d.name.toUpperCase()}`)
+                 ;
+
+    axisContainer.selectAll('path.axis-class-group-arrow')
+                 .data(classGroups)
+                 .join(enter => enter.append('path').classed('axis-class-group-arrow', true))
+                 .attr('stroke', '#654321')
+                 .attr('stroke-opacity', 0.2)
+                 .attr('stroke-width', 2)
+                 .attr('fill', 'none')
+                 .attr('d', (d, i) => {
+                    const position = positionForClassGroup(d, i);
+                    const { y1, y2 } = position;
+                    const x = xScale.range()[1] + labelsSize;
+
+                    return rightArrow({x: x + 5, y1: y1 - 10, y2: y2 + 10});
+                 })
                  ;
 };
 

@@ -264,6 +264,42 @@ const connectorPath = ({
 	return points.join('' );
 }
 
+const rightArrow = ({
+	x,
+	y1,
+	y2
+}) => {
+	const gap = 5;
+
+	let startX = x;
+	let startY = y1;
+	let midY = y1 + ((y2 - y1) / 2);
+	let endY = y2;
+
+	const points = [
+		// First elbow
+		`M ${startX} ${startY}`,
+		`L ${startX + gap * 2} ${startY}`,
+
+		// Move down to the arrow
+		`L ${startX + gap * 2} ${midY - gap}`,
+
+		// Start the arrow
+		`l ${gap} ${gap}`,
+
+		// Close the arrow
+		`l ${-gap} ${gap}`,
+
+		// Continue moving down
+		`L ${startX + gap * 2} ${endY}`,
+
+		// Second elbow
+		`L ${startX} ${endY}`
+	];
+
+	return points.join('' );
+}
+
 /*
 	Positions the elements in the grid with the bullet aligned to either left 
 	or right
@@ -340,5 +376,6 @@ export {
 	snakePath, 
 	connectorPath, 
 	describeArcPoint,
-	legend2ColumnLayout
+	legend2ColumnLayout,
+	rightArrow
 };
