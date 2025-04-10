@@ -16,7 +16,7 @@ const margins = {
     right: 20
 }
 
-const titleText = "WIP Visualization";
+const titleText = "INCOME AND EXPENDITURE OF 150 BLACK FAMILIES IN ATLANTA, GA., U.S.A.";
 
 const TitleTextStyle = {
     font: "1.2em 'B52-ULC W00 ULC'"
@@ -352,20 +352,22 @@ const Visualization = ({
     axisContainer.selectAll('text.axis-mark-text')
                  .data(categoryOrder)
                  .join(enter => enter.append('text').classed('axis-mark-text', true))
-                 .attr('y', 12)
+                 .attr('y', 24)
                  .attr('x', getXAxisTextMarkPosition)
                  .attr('text-anchor', 'middle')
                  .attr('alignment-baseline', 'middle')
                  .attr('font-family', 'Charter')
                  .attr('fill-opacity', 0.9)
                  .attr('font-size', 14)
+                 .attr('fill', '#654321')
+                 .attr('font-weight', 'bold')
                  .attr('dx', -5)
                  .text(d => `${d.toUpperCase()}`)
                  ;
 
     // Vertical labels headers
     axisContainer.selectAll('text.label-header')
-                 .data(['Class', 'Actual Average'])
+                 .data(['Range', 'Actual Average'])
                  .join(enter => enter.append('text').classed('label-header', true))
                  .attr('x', (_, i) => {
                     if (i === 0) return 0;
@@ -377,7 +379,7 @@ const Visualization = ({
                  .attr('alignment-baseline', 'middle')
                  .attr('font-family', 'Charter')
                  .attr('fill-opacity', 0.9)
-                 .attr('font-size', 12)
+                 .attr('font-size', 14)
                  .attr('font-weight', (_, i) => i === 0 ? '' : 'bold')
                  .attr('dy', '-1em')
                  ;
