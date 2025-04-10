@@ -108,7 +108,7 @@ const Visualization = ({
     // Scales
     const xScale = scaleLinear([0, 100], [0, maxBarWidth]);
     const yScale = scaleLinear([0, data.length], [yRange[0] + axisLabelsSize, yRange[1]]);
-    const colorScale = scaleOrdinal(categoryOrder, ['#dc143c', '#4682b4', '#ffd700', '#654321', '#d2b48c', '#7e6583' , '#00aa00', '#ffc0cb' , '#654321', '#000000']);
+    const colorRange = ['#000000', '#7e6583', '#ffc0cb', '#B1C0CC', '#d2b48c', '#d2b48c', '#7e6583' , '#00aa00', '#ffc0cb' , '#654321', '#000000'];
     const calculatedBarSize = barSize * 2;
 
     // Helper functions for positions
@@ -182,8 +182,11 @@ const Visualization = ({
                  .attr('x', getBarXPosition)
                  .attr('width', getBarWidth)
                  .attr('height', calculatedBarSize)
-                 .attr('fill', (_, i) => colorScale(i))
-                 .attr('fill-opacity', '0.4')
+                 .attr('fill', (_, i) => {
+                    const color = colorRange[i];
+                    return color;
+                  })
+                 .attr('fill-opacity', '0.6')
                  .attr('stroke', '#654321')
                  .attr('stroke-opacity', '0.2')
                  .attr('stroke-width', 2)
@@ -192,7 +195,7 @@ const Visualization = ({
     // Mark connectors
     const connectorCaches = {};
     const getConnectorPosition = (d, i) => {
-        const { original_index, name } = d;
+        const { original_index, name } = d; 
         const cacheKey = `${i}_${original_index}`;
 
         if (connectorCaches[cacheKey]) {
@@ -293,6 +296,7 @@ const Visualization = ({
                  })
                  .attr('font-size', 14)
                  .attr('font-weight', 'bold')
+                 .attr('fill', (_, i) => i === 0 ? 'white' : 'black')
                  .text(d => `${d.value}%`)
 
 
@@ -338,8 +342,8 @@ const Visualization = ({
                  .attr('x', getXAxisMarkPosition)
                  .attr('width', xScale(100/categoryOrder.length))
                  .attr('height', barSize)
-                 .attr('fill', (_, i) => colorScale(i))
-                 .attr('fill-opacity', '0.4')
+                 .attr('fill', (_, i) => colorRange[i])
+                 .attr('fill-opacity', '0.6')
                  .attr('stroke', '#654321')
                  .attr('stroke-opacity', '0.2')
                  .attr('stroke-width', 2)
